@@ -116,7 +116,20 @@ Expected result:
 
 After Cloudflare creates the Pages project:
 
-1. Visit the generated `.pages.dev` URL.
+1. Visit the canonical production URL:
+
+   ```text
+   https://harness-engineering-blog.pages.dev
+   ```
+
+   Wrangler may also print a deployment-specific preview URL like:
+
+   ```text
+   https://<deployment-hash>.harness-engineering-blog.pages.dev
+   ```
+
+   Prefer the canonical project URL for sharing unless you specifically need to inspect one immutable preview deploy.
+
 2. Confirm these routes work:
 
    ```text
@@ -136,6 +149,23 @@ After Cloudflare creates the Pages project:
    ```
 
 6. Later, after a custom domain is chosen, update Cloudflare Pages custom domains and replace the `.pages.dev` URL in config/docs.
+
+## Troubleshooting first deploy access
+
+If the deployment-specific preview URL does not load immediately, try the canonical project URL first:
+
+```text
+https://harness-engineering-blog.pages.dev
+```
+
+For a brand-new Pages project, DNS/TLS propagation can briefly lag right after Wrangler prints the deployment URL. Re-check after a minute and test with:
+
+```bash
+curl -I -L https://harness-engineering-blog.pages.dev
+curl -I -L https://<deployment-hash>.harness-engineering-blog.pages.dev
+```
+
+A successful response should be `HTTP/2 200`.
 
 ## Notes
 
