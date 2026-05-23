@@ -1,0 +1,12 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+const { frontmatter = {} } = Astro.props;
+const title = frontmatter.title ? `${frontmatter.title} | Harness Engineering Blog` : 'Harness Engineering Blog';
+const description = frontmatter.description ?? 'Harness engineering, agent-ready repositories, AGENTS.md, and repo-level context engineering for coding agents.';
+---
+<BaseLayout title={title} description={description}>
+  <article>
+    <slot />
+  </article>
+</BaseLayout>

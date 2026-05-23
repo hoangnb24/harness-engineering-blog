@@ -1,4 +1,5 @@
 ---
+layout: ../layouts/MarkdownLayout.astro
 title: "What Is an Agent-Ready Repository?"
 description: "An agent-ready repository gives AI coding agents the instructions, architecture context, validation rules, and decision history they need to make inspectable changes."
 target_keyword: "agent-ready repository"
