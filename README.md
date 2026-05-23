@@ -19,6 +19,21 @@ npm run dev
 npm run build
 ```
 
+## Deploy
+
+Cloudflare Pages deployment is documented here:
+
+```text
+docs/deploy-cloudflare-pages.md
+```
+
+Recommended Cloudflare Pages settings:
+
+- Framework preset: `Astro`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Production branch: `main`
+
 ## Initial content architecture
 
 - `/` — homepage
