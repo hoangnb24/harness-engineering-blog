@@ -27,6 +27,14 @@ Cloudflare Pages deployment is documented here:
 docs/deploy-cloudflare-pages.md
 ```
 
+## Growth operations
+
+Autonomous blog growth and publishing policy:
+
+```text
+docs/blog-growth-operating-policy.md
+```
+
 Recommended Cloudflare Pages settings:
 
 - Framework preset: `Astro`
