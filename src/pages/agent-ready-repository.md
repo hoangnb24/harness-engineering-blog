@@ -467,33 +467,3 @@ Or explore the open-source starting point:
 [`harness-experimental` on GitHub](https://github.com/hoangnb24/harness-experimental)
 
 If it helps your workflow, a star helps other developers discover it.
-
----
-
-## Internal link targets to add once site exists
-
-- `/agents-md-template/`
-- `/context-engineering-for-coding-agents/`
-- `/harness-engineering-for-coding-agents/`
-- `/blog/coding-agents-need-better-repositories/`
-- `/projects/harness-experimental/`
-
-## Suggested structured data
-
-Use later when implementing:
-
-- `Article`
-- `FAQPage`
-- `BreadcrumbList`
-
-## Distribution snippets
-
-### X / LinkedIn hook
-
-Coding agents do not only need better prompts. They need better repositories.
-
-I wrote a practical definition of an “agent-ready repository”: a repo that gives agents instructions, architecture context, validation rules, and decision history before they edit code.
-
-### Short CTA
-
-If your coding agents keep missing repo context, this checklist is for you.
