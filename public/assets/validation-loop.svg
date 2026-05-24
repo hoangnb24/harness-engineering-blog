@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Validation loop">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3f7fb"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#2e271c" flood-opacity=".12"/></filter>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse"><path d="M38 0H0V38" fill="none" stroke="#dedbd2" stroke-width="1" opacity=".5"/></pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <rect width="1200" height="630" fill="url(#grid)" opacity=".55"/>
+  <circle cx="1020" cy="110" r="150" fill="#2563eb" opacity=".12"/>
+  <circle cx="130" cy="520" r="190" fill="#f2c94c" opacity=".13"/>
+  <g filter="url(#shadow)"><rect x="220" y="150" width="760" height="330" rx="28" fill="#fff" stroke="#dedbd2"/><circle cx="425" cy="315" r="90" fill="#eef4ff" stroke="#2563eb" stroke-width="8"/><circle cx="775" cy="315" r="90" fill="#eefbf4" stroke="#27ae60" stroke-width="8"/><path d="M520 270c50-50 115-50 165 0M680 360c-50 50-115 50-165 0" fill="none" stroke="#2f3437" stroke-width="10" stroke-linecap="round"/><path d="M675 230l18 48-50-14M525 400l-18-48 50 14" fill="#2f3437"/><text x="370" y="325" font-family="ui-monospace, Menlo, monospace" font-size="32" fill="#2f3437">code</text><text x="730" y="325" font-family="ui-monospace, Menlo, monospace" font-size="32" fill="#2f3437">test</text></g>
+</svg>

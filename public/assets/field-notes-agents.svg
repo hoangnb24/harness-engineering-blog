@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Field notes from shipping with agents">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3f7fb"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#2e271c" flood-opacity=".12"/></filter>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse"><path d="M38 0H0V38" fill="none" stroke="#dedbd2" stroke-width="1" opacity=".5"/></pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <rect width="1200" height="630" fill="url(#grid)" opacity=".55"/>
+  <circle cx="1020" cy="110" r="150" fill="#eb5757" opacity=".12"/>
+  <circle cx="130" cy="520" r="190" fill="#f2c94c" opacity=".13"/>
+  <g filter="url(#shadow)"><rect x="250" y="110" width="700" height="410" rx="26" fill="#fff" stroke="#dedbd2"/><path d="M340 190h330M340 250h440M340 310h360M340 370h250" stroke="#d8d5cc" stroke-width="18" stroke-linecap="round"/><path d="M805 355c-45-25-90-10-110 30 42 18 84 15 110-30z" fill="#27ae60" opacity=".85"/><path d="M770 380c-10 42 9 80 52 98 19-42 10-83-52-98z" fill="#2563eb" opacity=".75"/><circle cx="820" cy="180" r="48" fill="#f2c94c" opacity=".85"/></g>
+</svg>

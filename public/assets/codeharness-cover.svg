@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="360" viewBox="0 0 1800 360" role="img" aria-label="CodeHarness cover">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#fff8ea"/><stop offset=".5" stop-color="#f5f7f2"/><stop offset="1" stop-color="#eef6ff"/></linearGradient><pattern id="dots" width="42" height="42" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="#c9c4b8" opacity=".65"/></pattern></defs>
+  <rect width="1800" height="360" fill="url(#g)"/><rect width="1800" height="360" fill="url(#dots)"/>
+  <g fill="none" stroke="#2f3437" stroke-width="3" opacity=".9">
+    <path d="M190 210 C330 110 430 250 560 150 S820 155 940 90 S1200 115 1360 210 S1590 238 1690 150"/>
+    <path d="M340 180h150v90H340zM760 118h180v110H760zM1120 168h160v88h-160z" rx="14"/>
+    <path d="M490 225h270M940 175h180"/>
+  </g>
+  <g fill="#2563eb" opacity=".88"><circle cx="340" cy="180" r="10"/><circle cx="760" cy="118" r="10"/><circle cx="1120" cy="168" r="10"/><circle cx="1360" cy="210" r="10"/></g>
+  <g fill="#27ae60" opacity=".9"><path d="M395 238l18 18 38-48" stroke="#27ae60" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M825 180l18 18 38-48" stroke="#27ae60" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
+</svg>

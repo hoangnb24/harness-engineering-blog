@@ -1,14 +1,16 @@
 ---
 const {
-  title = 'Harness Engineering Blog',
-  description = 'Harness engineering, agent-ready repositories, AGENTS.md, and repo-level context engineering for coding agents.'
+  title = 'CodeHarness',
+  description = 'Stories, tests, and practical notes from building with AI coding agents.'
 } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="max-image-preview:large" />
+    <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta property="og:title" content={title} />
@@ -18,64 +20,477 @@ const {
     <link rel="icon" href="/favicon.svg" />
     <style is:global>
       :root {
-        color-scheme: dark;
-        --bg: #080b12;
-        --panel: #101725;
-        --panel-2: #151e30;
-        --text: #e8eefc;
-        --muted: #9dafc9;
-        --line: #243149;
-        --accent: #79ffe1;
-        --accent-2: #9ab6ff;
-        --max: 1080px;
+        --gap-quarter: 0.25rem;
+        --gap-half: 0.5rem;
+        --gap: 1rem;
+        --gap-double: 2rem;
+        --bg: #fff;
+        --fg: #333;
+        --accents-1: #666;
+        --accents-2: #666;
+        --accents-3: #666;
+        --geist-foreground: #000;
+        --geist-success: #690;
+        --radius: 4px;
+        --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        --font-mono: SFMono-Regular, Menlo, Consolas, 'PT Mono', 'Liberation Mono', Courier, monospace;
       }
-      * { box-sizing: border-box; }
-      body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: radial-gradient(circle at top left, rgba(121,255,225,.14), transparent 32rem), var(--bg); color: var(--text); line-height: 1.65; }
-      a { color: var(--accent); text-decoration: none; }
-      a:hover { text-decoration: underline; }
-      header, main, footer { width: min(var(--max), calc(100% - 2rem)); margin: 0 auto; }
-      header { padding: 1.25rem 0; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-      nav { display: flex; gap: 1rem; flex-wrap: wrap; color: var(--muted); font-size: .95rem; }
-      .brand { color: var(--text); font-weight: 800; letter-spacing: -.03em; }
-      .hero { padding: 5rem 0 3rem; max-width: 860px; }
-      .eyebrow { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; }
-      h1, h2, h3 { line-height: 1.12; letter-spacing: -.04em; }
-      h1 { font-size: clamp(2.6rem, 7vw, 5.8rem); margin: .4rem 0 1rem; }
-      h2 { font-size: clamp(1.8rem, 4vw, 3rem); margin-top: 3rem; }
-      h3 { font-size: 1.45rem; margin-top: 2rem; }
-      p, li { color: var(--muted); }
-      strong { color: var(--text); }
-      .lead { font-size: clamp(1.1rem, 2vw, 1.35rem); max-width: 760px; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 2rem 0; }
-      .card { background: linear-gradient(180deg, var(--panel), rgba(16,23,37,.72)); border: 1px solid var(--line); border-radius: 18px; padding: 1.25rem; }
-      .card h3 { margin-top: 0; }
-      .button-row { display: flex; gap: .8rem; flex-wrap: wrap; margin-top: 1.6rem; }
-      .button { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: .75rem 1rem; background: var(--panel); color: var(--text); font-weight: 700; }
-      .button.primary { background: var(--accent); color: #061014; border-color: var(--accent); }
-      article { max-width: 820px; padding: 2rem 0 5rem; }
-      article h1 { font-size: clamp(2.2rem, 6vw, 4.4rem); }
-      article img { max-width: 100%; }
-      code { background: var(--panel-2); border: 1px solid var(--line); border-radius: .35rem; padding: .1rem .3rem; color: var(--accent-2); }
-      pre { background: #05070d; border: 1px solid var(--line); border-radius: 16px; padding: 1rem; overflow: auto; }
-      blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--text); }
-      footer { border-top: 1px solid var(--line); padding: 2rem 0 4rem; color: var(--muted); }
+
+      * { box-sizing: border-box; word-break: break-word; }
+
+      html, body {
+        padding: 0;
+        margin: 0;
+        font-size: 16px;
+      }
+
+      body {
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans GB', Meiryo, 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol';
+        background-position: 0 0, 25px 25px;
+        background-attachment: fixed;
+        background-size: 50px 50px;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      figure {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #999;
+        line-height: 1.8rem;
+      }
+
+      a { color: var(--accents-1); text-decoration: none; }
+      a:hover { color: var(--accents-1); }
+
+      mark {
+        padding: var(--gap-quarter);
+        border-radius: var(--radius);
+        background: rgba(247, 212, 255, 0.8);
+      }
+
+      h1 {
+        margin: 0;
+        color: var(--fg);
+        font-size: 2rem;
+        font-weight: 700;
+      }
+
+      @media (max-width: 640px) {
+        h1 { font-size: 1.6rem; }
+      }
+
+      h2 {
+        margin: 0;
+        color: #333;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+
+      .top-nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 1.25rem;
+        background: rgba(255, 255, 255, 0.86);
+        border-bottom: 1px solid #eee;
+        backdrop-filter: blur(16px);
+      }
+
+      .top-nav a { color: #333; }
+
+      .brand {
+        font-weight: 700;
+        color: #333;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        justify-content: flex-end;
+      }
+
+      .nav-links a {
+        border-radius: var(--radius);
+        padding: 0.3rem 0.5rem;
+        color: #666;
+        font-size: 0.92rem;
+      }
+
+      .nav-links a:hover {
+        background: #f4f4f4;
+        color: #333;
+      }
+
+      @media (max-width: 640px) {
+        .top-nav {
+          position: static;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      ol {
+        color: #222;
+        font-weight: 400;
+        font-size: 0.9rem;
+        line-height: 1.8rem;
+      }
+
+      p, ul {
+        color: #222;
+        font-weight: 400;
+        font-size: 1rem;
+        line-height: 1.8rem;
+      }
+
+      ul, ol {
+        margin: 0;
+        padding-inline-start: 1.5rem;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre;
+        tab-size: 2;
+      }
+
+      hr {
+        display: block;
+        height: 1px;
+        border: 0;
+        margin: 0.3rem 0;
+        background-color: #333;
+      }
+
+      code {
+        font-size: 0.9rem;
+        background: rgba(135, 131, 120, 0.15);
+        color: #eb5757;
+        padding: 0.25rem;
+        border-radius: var(--radius);
+        font-family: var(--font-mono);
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        border-collapse: collapse;
+      }
+
+      table tr { vertical-align: top; }
+      table th { font-weight: 600; background-color: #f4f4f4; }
+
+      table td, table th {
+        font-size: 0.9rem;
+        border: 1px solid #e4e4e4;
+        padding: 0.5rem 1rem;
+        text-align: left;
+        line-height: 1.2rem;
+      }
+
+      table td::after {
+        content: '';
+        display: inline-block;
+        min-height: 0.9rem;
+      }
+
+      .container { min-height: 100vh; }
+
+      .container > div {
+        display: flex;
+        max-width: 1280px;
+      }
+
+      @media (max-width: 640px) {
+        .container > div { display: block; }
+      }
+
+      main {
+        flex: 1;
+        order: 2;
+        justify-content: space-between;
+      }
+
+      @media (max-width: 640px) {
+        main { order: 1; }
+      }
+
+      aside {
+        order: 1;
+        width: 300px;
+        padding: 20px 20px;
+        background-color: #f4f4f4;
+      }
+
+      @media (max-width: 640px) {
+        aside {
+          order: 2;
+          width: 100%;
+        }
+      }
+
+      div.cover {
+        display: none;
+      }
+
+      div.content { padding: 20px 40px; }
+
+      @media (max-width: 640px) {
+        div.content { padding: 0 18px; }
+      }
+
+      main header { padding: 20px 0 20px; }
+
+      main header h1 {
+        font-weight: 700;
+        color: #333;
+      }
+
+      main header h1 a {
+        display: block;
+        color: inherit;
+      }
+
+      main header h1 a:hover { color: inherit; }
+
+      main header h1 a span,
+      main header h1 a img {
+        display: inline-block;
+        font-size: 1.1em;
+      }
+
+      main header h1 a span {
+        margin-right: 0.3em;
+        margin-left: -0.1rem;
+      }
+
+      main header div.description {
+        padding: 0.3rem 0 0.6rem;
+        font-size: 0.95rem;
+      }
+
+      main footer {
+        margin: 30px 0 10px;
+        text-align: center;
+        font-size: 0.75rem;
+      }
+
+      @media (max-width: 640px) {
+        main footer { margin: 0 auto 30px; }
+      }
+
+      main footer span { color: #777; }
+      main footer a { color: inherit; text-decoration: underline; }
+
+      .main {
+        max-width: 640px;
+      }
+
+      .main header { padding: 0 0 20px; }
+
+      .main footer {
+        border-top: 1px dashed #888;
+        margin: 0 auto;
+        padding: 40px 0 0;
+      }
+
+      @media (max-width: 640px) {
+        .main footer { margin: 0 auto 40px; }
+      }
+
+      .post { margin: 0 auto 40px; }
+
+      .post footer {
+        margin-top: 0.5rem;
+        padding: 0;
+        border: 0;
+      }
+
+      .post-date {
+        margin: 0 0 0.25rem;
+        color: #666;
+        font-size: 0.9rem;
+        line-height: 1.8rem;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin: 0 0 0.35rem;
+      }
+
+      .tag {
+        display: inline-block;
+        border-radius: var(--radius);
+        padding: 0.1rem 0.4rem;
+        color: #555;
+        font-size: 0.85rem;
+        line-height: 1.35rem;
+      }
+
+      .tag-introduction { background: rgb(211, 229, 239); }
+      .tag-en { background: rgb(250, 222, 201); }
+      .tag-how-to { background: rgb(251, 243, 219); }
+      .tag-document { background: rgb(232, 222, 238); }
+      .tag-diary { background: rgb(219, 237, 219); }
+
+      .post h2 { margin: 0.2rem 0 0.75rem; }
+      .post h2 a { color: #333; text-decoration: none; }
+      .post h2 a:hover { color: #333; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+      .post img {
+        display: block;
+        width: 100%;
+        max-width: 640px;
+        height: auto;
+        margin: 0.7rem 0 0.9rem;
+      }
+
+      .post img.demo-og {
+        width: 600px;
+        max-width: 100%;
+      }
+
+      .post img.photo-wide {
+        width: 640px;
+        max-width: 100%;
+      }
+
+      .post img.photo-medium {
+        width: 520px;
+        max-width: 100%;
+      }
+
+      .post p { margin: 0 0 0.8rem; }
+      .read-more { color: #666; text-decoration: underline; }
+
+      .search-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 2rem;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: #666;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      aside h2 {
+        margin: 0 0 0.7rem;
+        color: #555;
+        font-size: 1rem;
+      }
+
+      aside ul {
+        list-style: none;
+        margin: 0 0 2rem;
+        padding: 0;
+      }
+
+      aside li {
+        margin: 0 0 0.65rem;
+        color: #222;
+        font-size: 1rem;
+        line-height: 1.4rem;
+      }
+
+      aside a {
+        color: #222;
+        text-decoration: none;
+      }
+
+      .category-list li { margin-bottom: 0.45rem; }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.35rem;
+      }
+
+      .pagination a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.4rem;
+        height: 2.6rem;
+        border-radius: var(--radius);
+        background: #f4f4f4;
+        color: #666;
+      }
     </style>
   </head>
   <body>
-    <header>
-      <a class="brand" href="/">Harness Engineering Blog</a>
-      <nav>
-        <a href="/agent-ready-repository/">Agent-ready repos</a>
-        <a href="/agents-md-template/">AGENTS.md template</a>
-        <a href="/blog/">Blog</a>
-        <a href="/projects/harness-experimental/">harness-experimental</a>
-      </nav>
-    </header>
-    <main>
-      <slot />
-    </main>
-    <footer>
-      Built for developers turning repositories into reliable workspaces for coding agents.
-    </footer>
+    <div class="container">
+      <header>
+        <nav class="top-nav" aria-label="Primary navigation">
+          <a class="brand" href="/">CodeHarness</a>
+          <div class="nav-links">
+            <a href="/blog/">Blog</a>
+            <a href="/agent-ready-repository/">Agent-Ready Repos</a>
+            <a href="/agents-md-template/">AGENTS.md</a>
+            <a href="/projects/harness-experimental/">Projects</a>
+          </div>
+        </nav>
+      </header>
+      <div>
+        <main>
+          <div class="content">
+            <header>
+              <h1><a href="/"><slot name="site-title">CodeHarness</slot></a></h1>
+              <div class="description">{description}</div>
+            </header>
+            <slot />
+            <footer>
+              <div>
+                <span>Inspired by&nbsp;</span>
+                <a href="https://github.com/otoyo/astro-notion-blog">astro-notion-blog</a>
+              </div>
+            </footer>
+          </div>
+        </main>
+        <aside>
+          <button class="search-button" type="button" aria-label="Search">
+            <span>🔍</span>
+            <span>Search</span>
+          </button>
+          <h2>Recommended</h2>
+          <ul>
+            <li><a href="/agent-ready-repository/">🧑‍🚀 Introduction of CodeHarness</a></li>
+            <li><a href="/agent-ready-repository/">How to make a repository agent-ready</a></li>
+            <li><a href="/agents-md-template/">🧭 AGENTS.md as durable context</a></li>
+          </ul>
+          <h2>Categories</h2>
+          <ul class="category-list">
+            <li><a class="tag tag-diary" href="/blog/">Diary</a></li>
+            <li><a class="tag tag-document" href="/blog/">Document</a></li>
+            <li><a class="tag tag-en" href="/blog/">en</a></li>
+            <li><a class="tag tag-how-to" href="/blog/">How-to</a></li>
+            <li><a class="tag tag-introduction" href="/blog/">Introduction</a></li>
+          </ul>
+        </aside>
+      </div>
+    </div>
   </body>
 </html>

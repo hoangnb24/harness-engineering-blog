@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Agent ready repository">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3f7fb"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#2e271c" flood-opacity=".12"/></filter>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse"><path d="M38 0H0V38" fill="none" stroke="#dedbd2" stroke-width="1" opacity=".5"/></pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <rect width="1200" height="630" fill="url(#grid)" opacity=".55"/>
+  <circle cx="1020" cy="110" r="150" fill="#27ae60" opacity=".12"/>
+  <circle cx="130" cy="520" r="190" fill="#f2c94c" opacity=".13"/>
+  <g filter="url(#shadow)"><rect x="180" y="120" width="840" height="390" rx="28" fill="#fff" stroke="#dedbd2"/><path d="M275 220h220v65H275zM275 340h220v65H275zM690 220h220v65H690zM690 340h220v65H690z" fill="#f7f6f3" stroke="#2f3437" stroke-width="5"/><path d="M495 252h195M495 372h195" stroke="#2563eb" stroke-width="8" stroke-linecap="round"/><text x="305" y="260" font-family="ui-monospace, Menlo, monospace" font-size="28" fill="#2f3437">AGENTS.md</text><text x="730" y="260" font-family="ui-monospace, Menlo, monospace" font-size="28" fill="#2f3437">test</text><text x="315" y="380" font-family="ui-monospace, Menlo, monospace" font-size="28" fill="#2f3437">docs</text><text x="730" y="380" font-family="ui-monospace, Menlo, monospace" font-size="28" fill="#2f3437">scripts</text></g>
+</svg>

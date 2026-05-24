@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Introduction of CodeHarness">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3f7fb"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#2e271c" flood-opacity=".12"/></filter>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse"><path d="M38 0H0V38" fill="none" stroke="#dedbd2" stroke-width="1" opacity=".5"/></pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <rect width="1200" height="630" fill="url(#grid)" opacity=".55"/>
+  <circle cx="1020" cy="110" r="150" fill="#2563eb" opacity=".12"/>
+  <circle cx="130" cy="520" r="190" fill="#f2c94c" opacity=".13"/>
+  <g filter="url(#shadow)"><rect x="210" y="140" width="780" height="350" rx="28" fill="#fff" stroke="#dedbd2"/><circle cx="360" cy="315" r="82" fill="#f7f6f3" stroke="#2f3437" stroke-width="8"/><path d="M330 300h60M350 338h20" stroke="#2f3437" stroke-width="8" stroke-linecap="round"/><rect x="510" y="210" width="340" height="36" rx="9" fill="#e8f0fe"/><rect x="510" y="275" width="270" height="24" rx="8" fill="#f1f1ef"/><rect x="510" y="325" width="310" height="24" rx="8" fill="#f1f1ef"/><path d="M885 250l42 42 82-104" fill="none" stroke="#27ae60" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

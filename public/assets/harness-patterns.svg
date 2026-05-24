@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Supported harness patterns">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3f7fb"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#2e271c" flood-opacity=".12"/></filter>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse"><path d="M38 0H0V38" fill="none" stroke="#dedbd2" stroke-width="1" opacity=".5"/></pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <rect width="1200" height="630" fill="url(#grid)" opacity=".55"/>
+  <circle cx="1020" cy="110" r="150" fill="#9b51e0" opacity=".12"/>
+  <circle cx="130" cy="520" r="190" fill="#f2c94c" opacity=".13"/>
+  <g filter="url(#shadow)"><rect x="170" y="130" width="860" height="370" rx="28" fill="#fff" stroke="#dedbd2"/><g fill="#f7f6f3" stroke="#2f3437" stroke-width="5"><rect x="250" y="210" width="150" height="90" rx="16"/><rect x="455" y="210" width="150" height="90" rx="16"/><rect x="660" y="210" width="150" height="90" rx="16"/><rect x="455" y="350" width="150" height="90" rx="16"/></g><g stroke="#2563eb" stroke-width="7"><path d="M400 255h55M605 255h55M535 300v50"/></g><g font-family="ui-monospace, Menlo, monospace" font-size="23" fill="#2f3437"><text x="286" y="263">docs</text><text x="492" y="263">tests</text><text x="690" y="263">scripts</text><text x="483" y="403">rules</text></g></g>
+</svg>

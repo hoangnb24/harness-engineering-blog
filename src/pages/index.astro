@@ -1,31 +1,96 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const posts = [
+  {
+    date: '2026-05-24',
+    tags: [
+      ['Introduction', 'tag-introduction'],
+      ['en', 'tag-en'],
+    ],
+    title: '🧑‍🚀 Introduction of CodeHarness',
+    image: '/assets/introduction-codeharness.svg',
+    imageClass: 'demo-og',
+    excerpt: 'This page explains CodeHarness: a practical notebook for making AI coding agents more reliable in real repositories.',
+    link: '/agent-ready-repository/',
+  },
+  {
+    date: '2026-05-23',
+    tags: [
+      ['How-to', 'tag-how-to'],
+      ['en', 'tag-en'],
+    ],
+    title: 'How to make a repository agent-ready',
+    image: '/assets/agent-ready-repository.svg',
+    imageClass: 'photo-wide',
+    excerpt: 'Start with durable instructions, clear scripts, validation loops, and repo context that coding agents can safely follow.',
+    link: '/agent-ready-repository/',
+  },
+  {
+    date: '2026-05-22',
+    tags: [
+      ['Document', 'tag-document'],
+      ['en', 'tag-en'],
+    ],
+    title: '🧭 AGENTS.md as durable context',
+    image: '/assets/agents-md-context.svg',
+    imageClass: 'demo-og',
+    excerpt: 'Use AGENTS.md to give every coding-agent session the same repository rules, workflows, and verification commands.',
+    link: '/agents-md-template/',
+  },
+  {
+    date: '2026-05-21',
+    tags: [
+      ['How-to', 'tag-how-to'],
+      ['en', 'tag-en'],
+    ],
+    title: 'How to build a reliable validation loop',
+    image: '/assets/validation-loop.svg',
+    imageClass: 'photo-medium',
+    excerpt: 'A coding agent becomes more useful when the repository gives it fast checks, clear scripts, and tight feedback.',
+    link: '/blog/',
+  },
+  {
+    date: '2026-05-20',
+    tags: [['Document', 'tag-document']],
+    title: '🔧 Supported harness patterns',
+    image: '/assets/harness-patterns.svg',
+    imageClass: 'demo-og',
+    excerpt: 'A working harness combines tests, docs, scripts, conventions, fixtures, examples, and decision records.',
+    link: '/projects/harness-experimental/',
+  },
+  {
+    date: '2026-05-19',
+    tags: [['Diary', 'tag-diary']],
+    title: '🏝️ Field notes from shipping with agents',
+    image: '/assets/field-notes-agents.svg',
+    imageClass: 'photo-medium',
+    excerpt: 'Short notes on what worked, what failed, and what should become part of the next CodeHarness iteration.',
+    link: '/blog/',
+  },
+];
 ---
-<BaseLayout title="Harness Engineering Blog" description="Harness engineering, agent-ready repositories, AGENTS.md, and repo-level context engineering for coding agents.">
-  <section class="hero">
-    <div class="eyebrow">Harness engineering for coding agents</div>
-    <h1>Coding agents need better repositories, not just better prompts.</h1>
-    <p class="lead">This site is the practical field guide to agent-ready repositories: repo instructions, validation loops, context boundaries, and harnesses that make AI coding agents more reliable.</p>
-    <div class="button-row">
-      <a class="button primary" href="/agent-ready-repository/">Read the pillar guide</a>
-      <a class="button" href="https://github.com/hoangnb24/harness-experimental">View harness-experimental</a>
-    </div>
-  </section>
-  <section class="grid">
-    <article class="card">
-      <h3>Agent-ready repositories</h3>
-      <p>Define the repo-level structure and context coding agents need before they make changes.</p>
-      <a href="/agent-ready-repository/">Start here →</a>
-    </article>
-    <article class="card">
-      <h3>AGENTS.md</h3>
-      <p>Use durable repository instructions instead of repeating prompts in every session.</p>
-      <a href="/agents-md-template/">Use the template →</a>
-    </article>
-    <article class="card">
-      <h3>Harness engineering</h3>
-      <p>Turn tests, scripts, docs, conventions, and decision records into a harness for agents.</p>
-      <a href="/blog/">Read the blog →</a>
-    </article>
-  </section>
+<BaseLayout title="CodeHarness" description="Stories, tests, and practical notes from building with AI coding agents.">
+  <div slot="site-title">CodeHarness</div>
+  <div class="main">
+    {posts.map((post) => (
+      <article class="post">
+        <div class="post-date">{post.date}</div>
+        <div class="tags">
+          {post.tags.map(([tag, tagClass]) => <a class={`tag ${tagClass}`} href="/blog/">{tag}</a>)}
+        </div>
+        <h2><a href={post.link}>{post.title}</a></h2>
+        <a href={post.link}><img class={post.imageClass} src={post.image} alt="Featured image of the post" loading="lazy" /></a>
+        <p>{post.excerpt}</p>
+        <a class="read-more" href={post.link}>→ Read more</a>
+      </article>
+    ))}
+    <footer>
+      <nav class="pagination" aria-label="Pagination">
+        <a href="/">&lt;&lt;</a>
+        <a href="/">1</a>
+        <a href="/">&gt;&gt;</a>
+      </nav>
+    </footer>
+  </div>
 </BaseLayout>
