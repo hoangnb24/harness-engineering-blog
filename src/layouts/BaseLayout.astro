@@ -183,8 +183,8 @@ const {
       code {
         font-size: 0.9rem;
         background: rgba(135, 131, 120, 0.15);
-        color: #eb5757;
-        padding: 0.25rem;
+        color: #9b4d35;
+        padding: 0.18rem 0.28rem;
         border-radius: var(--radius);
         font-family: var(--font-mono);
       }
@@ -252,7 +252,7 @@ const {
         display: none;
       }
 
-      div.content { padding: 20px 40px; }
+      div.content { padding: 28px 48px; }
 
       @media (max-width: 640px) {
         div.content { padding: 0 18px; }
@@ -438,6 +438,105 @@ const {
         border-radius: var(--radius);
         background: #f4f4f4;
         color: #666;
+      }
+
+      .notion-page {
+        max-width: 760px;
+        padding: 0 0 4rem;
+      }
+
+      .article-header {
+        margin: 0 0 2rem;
+        padding: 0 0 1.25rem;
+        border-bottom: 1px dashed #d7d4ca;
+      }
+
+      .article-header h1 {
+        margin: 0.35rem 0 0.8rem;
+        font-size: clamp(2rem, 5vw, 3rem);
+        line-height: 1.12;
+      }
+
+      .article-header p {
+        margin: 0;
+        color: #666;
+        font-size: 1.05rem;
+      }
+
+      .notion-page > h1:first-of-type {
+        display: none;
+      }
+
+      .notion-page h2 {
+        margin: 2.4rem 0 0.75rem;
+        padding-top: 0.2rem;
+      }
+
+      .notion-page h3 {
+        margin: 1.7rem 0 0.5rem;
+        font-size: 1.18rem;
+      }
+
+      .notion-page p {
+        margin: 0.85rem 0;
+      }
+
+      .notion-page ul,
+      .notion-page ol {
+        margin: 0.75rem 0 1.1rem;
+      }
+
+      .notion-page li {
+        margin: 0.35rem 0;
+        line-height: 1.75rem;
+      }
+
+      .notion-page blockquote {
+        margin: 1.2rem 0;
+        border-left: 4px solid #d7d4ca;
+        padding: 0.5rem 0 0.5rem 1rem;
+        background: #fbfaf7;
+      }
+
+      .notion-page blockquote p {
+        margin: 0;
+        color: #444;
+      }
+
+      .notion-page pre {
+        margin: 1rem 0;
+        border: 1px solid #343a46;
+        border-radius: 8px;
+        background: #111827;
+        padding: 1rem 1.1rem;
+        overflow-x: auto;
+        line-height: 1.7;
+        white-space: pre;
+      }
+
+      .notion-page pre code {
+        display: block;
+        min-width: max-content;
+        background: transparent !important;
+        color: #f8fafc !important;
+        padding: 0;
+        font-size: 0.95rem;
+        letter-spacing: 0;
+      }
+
+      .notion-page pre code span {
+        color: #f8fafc !important;
+      }
+
+      .notion-page table {
+        width: 100%;
+        margin: 1rem 0 1.4rem;
+      }
+
+      .notion-page hr {
+        margin: 2rem 0;
+        background: transparent;
+        border-top: 1px dashed #d7d4ca;
       }
     </style>
   </head>

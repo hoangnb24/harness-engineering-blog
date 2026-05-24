@@ -2,11 +2,21 @@
 import BaseLayout from './BaseLayout.astro';
 
 const { frontmatter = {} } = Astro.props;
-const title = frontmatter.title ? `${frontmatter.title} | Harness Engineering Blog` : 'Harness Engineering Blog';
-const description = frontmatter.description ?? 'Harness engineering, agent-ready repositories, AGENTS.md, and repo-level context engineering for coding agents.';
+const pageTitle = frontmatter.title ?? 'CodeHarness';
+const title = frontmatter.title ? `${frontmatter.title} | CodeHarness` : 'CodeHarness';
+const description = frontmatter.description ?? 'Stories, tests, and practical notes from building with AI coding agents.';
+const date = frontmatter.date;
+const status = frontmatter.status;
 ---
 <BaseLayout title={title} description={description}>
-  <article>
+  <div slot="site-title">CodeHarness</div>
+  <article class="notion-page">
+    <header class="article-header">
+      {date && <div class="post-date">{date}</div>}
+      {status && <span class="tag tag-document">{status}</span>}
+      <h1>{pageTitle}</h1>
+      <p>{description}</p>
+    </header>
     <slot />
   </article>
 </BaseLayout>
