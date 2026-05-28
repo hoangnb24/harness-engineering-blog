@@ -1,19 +1,150 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="AGENTS.md Template" description="A practical AGENTS.md template for agent-ready repositories.">
+<BaseLayout title="AGENTS.md Template" description="A practical AGENTS.md template for agent-ready repositories — copy and adapt for Claude Code, Codex, Cursor, and other coding agents.">
   <article>
     <h1>AGENTS.md Template</h1>
-    <p>This page will become the reusable template for Claude Code, Codex, Cursor, and other coding agents.</p>
-    <h2>Template sections</h2>
+    <p class="lead">A concise operating guide for AI coding agents. Put this file in the root of your repository so every agent session starts with the same context.</p>
+
+    <blockquote>
+      <p>Copy the template below into your repo as <code>AGENTS.md</code>, then fill in your project-specific details. Keep it concise — agents read it at the start of every session.</p>
+    </blockquote>
+
+    <h2>The template</h2>
+
+    <pre class="code-block"><code># AGENTS.md — [Project Name]
+
+## Project overview
+
+[What this repo does in 2–4 sentences. Who it is for. What problem it solves.]
+
+## Before you start
+
+- Read these files first: [e.g. README.md, docs/architecture.md]
+- Preferred change size: small and reviewable
+- Do not change public APIs without updating tests and docs
+- Do not modify credentials, secrets, or migration files
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| <code>npm install</code> | Install dependencies |
+| <code>npm test</code> | Run full test suite |
+| <code>npm run lint</code> | Lint and format check |
+| <code>npm run typecheck</code> | TypeScript type checking |
+| <code>npm run build</code> | Production build |
+
+## Architecture
+
+- `src/` — [description]
+- `src/api/` — [description]
+- `src/domain/` — [description]
+- `src/ui/` — [description]
+- `tests/` — [description]
+- `docs/` — [description]
+
+## What not to touch
+
+- `src/config/secrets.ts` — credentials, do not edit
+- `db/migrations/` — talk to a human first
+- `src/auth/` — security-sensitive, get approval
+
+## Validation matrix
+
+| Change type | Required checks |
+|---|---|
+| Docs only | <code>npm run lint -- --fix</code> |
+| Frontend UI | <code>npm test</code> + <code>npm run build</code> |
+| API change | <code>npm test</code> + integration tests |
+| Refactor | Full test suite + typecheck + build |
+
+## Story packet format
+
+When picking up a task, use this structure:
+
+```
+Problem:
+
+User outcome:
+
+Relevant files:
+
+Constraints:
+
+Acceptance criteria:
+
+Validation commands:
+
+Out of scope:
+```
+
+## Decisions that are already made
+
+- [Why you chose this数据库方案]
+- [Why this architecture pattern]
+- [What should NOT be revisited without a team discussion]
+</code></pre>
+
+    <h2>How to use this template</h2>
+    <ol>
+      <li><strong>Copy</strong> the template into your repo root as <code>AGENTS.md</code></li>
+      <li><strong>Fill in</strong> the project overview — 2–4 sentences, no prose</li>
+      <li><strong>List</strong> the exact commands for install, test, lint, typecheck, build</li>
+      <li><strong>Map</strong> the main directories and their purposes</li>
+      <li><strong>Mark</strong> any safety boundaries — files or areas agents should not touch</li>
+      <li><strong>Define</strong> your validation matrix — which checks prove which change types</li>
+      <li><strong>Record</strong> 2–3 non-obvious decisions agents should not reopen</li>
+    </ol>
+
+    <h2>Common mistakes to avoid</h2>
     <ul>
-      <li>Project purpose</li>
-      <li>Architecture map</li>
-      <li>Commands and validation</li>
-      <li>Safe-change boundaries</li>
-      <li>Testing expectations</li>
-      <li>Review checklist</li>
+      <li><strong>Vague commands</strong> — "run tests" is not enough; say exactly which command and which outcomes</li>
+      <li><strong>Too long</strong> — if it is more than a screen, cut detail and link to docs</li>
+      <li><strong>Task-specific context</strong> — temporary task details belong in the story packet or prompt, not here</li>
+      <li><strong>No review step</strong> — agent-ready does not mean agent-only; humans still review every change</li>
     </ul>
+
+    <h2>Tool-specific notes</h2>
+    <ul>
+      <li><strong>Claude Code</strong> — reads AGENTS.md on every <code>claude code</code> invocation; keep it at the root</li>
+      <li><strong>Cursor</strong> — place in <code>.cursor/rules/</code> for cursor-agent compatible use</li>
+      <li><strong>Codex</strong> — some setups read from project instructions; check your agent config</li>
+      <li><strong>Aider</strong> — use <code>--read agent-context-files</code> to provide AGENTS.md context</li>
+    </ul>
+
     <p><a href="/agent-ready-repository/">Learn why this matters →</a></p>
   </article>
 </BaseLayout>
+
+<style>
+  .lead {
+    font-size: 1.1em;
+    color: var(--text-secondary);
+    margin-bottom: 1.5em;
+  }
+  .code-block {
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2em;
+    overflow-x: auto;
+    font-size: 0.85em;
+    line-height: 1.6;
+    margin: 1.5em 0;
+  }
+  .code-block code {
+    font-family: var(--font-mono);
+    white-space: pre;
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1em;
+    margin: 1.5em 0;
+    color: var(--text-secondary);
+  }
+  h2 {
+    margin-top: 2em;
+    margin-bottom: 0.75em;
+  }
+</style>

@@ -14,7 +14,7 @@ secondary_keywords:
   - AGENTS.md
   - repo-level context engineering
   - harness engineering
-status: "draft"
+status: "published"
 date: "2026-05-23"
 ---
 

@@ -1,12 +1,64 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const blogPosts = [
+  {
+    date: '2026-05-28',
+    tags: [['How-to', 'tag-how-to'], ['en', 'tag-en']],
+    title: 'How to Write an AGENTS.md That Actually Works',
+    excerpt: 'Most AGENTS.md files nobody reads. Here is how to write one that coding agents actually use — specific, concise, and validated by real sessions.',
+    link: '/blog/how-to-write-agents-md/',
+  },
+  {
+    date: '2026-05-24',
+    tags: [['Introduction', 'tag-introduction'], ['en', 'tag-en']],
+    title: 'What Is an Agent-Ready Repository?',
+    excerpt: 'An agent-ready repository gives coding agents the instructions, architecture context, validation rules, and decision history they need to make useful, reviewable changes.',
+    link: '/agent-ready-repository/',
+  },
+  {
+    date: '2026-05-23',
+    tags: [['Document', 'tag-document'], ['en', 'tag-en']],
+    title: 'AGENTS.md Template',
+    excerpt: 'A practical template for agent-ready repositories — copy and adapt for Claude Code, Codex, Cursor, and other coding agents.',
+    link: '/agents-md-template/',
+  },
+  {
+    date: '2026-05-22',
+    tags: [['How-to', 'tag-how-to'], ['en', 'tag-en']],
+    title: 'How to build a reliable validation loop',
+    excerpt: 'A coding agent becomes more useful when the repository gives it fast checks, clear scripts, and tight feedback.',
+    link: '/agent-ready-repository/',
+  },
+  {
+    date: '2026-05-20',
+    tags: [['Document', 'tag-document'], ['en', 'tag-en']],
+    title: 'Supported harness patterns',
+    excerpt: 'A working harness combines tests, docs, scripts, conventions, fixtures, examples, and decision records.',
+    link: '/projects/harness-experimental/',
+  },
+  {
+    date: '2026-05-19',
+    tags: [['Diary', 'tag-diary'], ['en', 'tag-en']],
+    title: 'Field notes from shipping with agents',
+    excerpt: 'Short notes on what worked, what failed, and what should become part of the next CodeHarness iteration.',
+    link: '/projects/harness-experimental/',
+  },
+];
 ---
 <BaseLayout title="Blog | Harness Engineering Blog" description="Articles about AGENTS.md, context engineering, and agent-ready repositories.">
-  <article>
-    <h1>Blog</h1>
-    <p>First posts are being prepared around agent-ready repositories, AGENTS.md, Cursor rules, and repo-level context engineering.</p>
-    <ul>
-      <li><a href="/agent-ready-repository/">What Is an Agent-Ready Repository?</a></li>
-    </ul>
-  </article>
+  <div slot="site-title">CodeHarness</div>
+  <div class="main">
+    {blogPosts.map((post) => (
+      <article class="post">
+        <div class="post-date">{post.date}</div>
+        <div class="tags">
+          {post.tags.map(([tag, tagClass]) => <a class={`tag ${tagClass}`} href="/blog/">{tag}</a>)}
+        </div>
+        <h2><a href={post.link}>{post.title}</a></h2>
+        <p>{post.excerpt}</p>
+        <a class="read-more" href={post.link}>→ Read more</a>
+      </article>
+    ))}
+  </div>
 </BaseLayout>
