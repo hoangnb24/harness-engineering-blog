@@ -4,6 +4,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 const blogPosts = [
   {
     date: '2026-05-28',
+    tags: [['Introduction', 'tag-introduction'], ['en', 'tag-en']],
+    title: 'Coding Agents Need Better Repositories, Not Just Better Prompts',
+    excerpt: 'Most coding-agent failures are not model failures. They are repo-context failures. Better prompts help. But repositories need instructions, architecture context, and validation rules.',
+    link: '/blog/coding-agents-need-better-repositories/',
+  },
+  {
+    date: '2026-05-28',
+    tags: [['Introduction', 'tag-introduction'], ['en', 'tag-en']],
+    title: 'Context Engineering for Coding Agents: A Practical Repo-Level Guide',
+    excerpt: 'Context engineering for coding agents means shaping the repo environment so agents receive durable, relevant context before they write code. Here is how to apply it.',
+    link: '/context-engineering-for-coding-agents/',
+  },
+  {
+    date: '2026-05-28',
     tags: [['How-to', 'tag-how-to'], ['en', 'tag-en']],
     title: 'How to Write an AGENTS.md That Actually Works',
     excerpt: 'Most AGENTS.md files nobody reads. Here is how to write one that coding agents actually use — specific, concise, and validated by real sessions.',
@@ -24,24 +38,10 @@ const blogPosts = [
     link: '/agents-md-template/',
   },
   {
-    date: '2026-05-22',
-    tags: [['How-to', 'tag-how-to'], ['en', 'tag-en']],
-    title: 'How to build a reliable validation loop',
-    excerpt: 'A coding agent becomes more useful when the repository gives it fast checks, clear scripts, and tight feedback.',
-    link: '/agent-ready-repository/',
-  },
-  {
     date: '2026-05-20',
     tags: [['Document', 'tag-document'], ['en', 'tag-en']],
     title: 'Supported harness patterns',
     excerpt: 'A working harness combines tests, docs, scripts, conventions, fixtures, examples, and decision records.',
-    link: '/projects/harness-experimental/',
-  },
-  {
-    date: '2026-05-19',
-    tags: [['Diary', 'tag-diary'], ['en', 'tag-en']],
-    title: 'Field notes from shipping with agents',
-    excerpt: 'Short notes on what worked, what failed, and what should become part of the next CodeHarness iteration.',
     link: '/projects/harness-experimental/',
   },
 ];
