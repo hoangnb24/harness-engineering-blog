@@ -7,11 +7,13 @@ const title = frontmatter.title ? `${frontmatter.title} | CodeHarness` : 'CodeHa
 const description = frontmatter.description ?? 'Stories, tests, and practical notes from building with AI coding agents.';
 const date = frontmatter.date;
 const status = frontmatter.status;
+const heroImage = frontmatter.image;
 ---
 <BaseLayout title={title} description={description}>
   <div slot="site-title">CodeHarness</div>
   <article class="notion-page">
     <header class="article-header">
+      {heroImage && <img src={heroImage} alt={pageTitle} class="hero-image" />}
       {date && <div class="post-date">{date}</div>}
       {status && <span class="tag tag-document">{status}</span>}
       <h1>{pageTitle}</h1>

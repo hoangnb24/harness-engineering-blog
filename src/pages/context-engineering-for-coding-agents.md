@@ -11,6 +11,7 @@ secondary_keywords:
   - agent-ready repository
 status: "published"
 date: "2026-05-28"
+image: /assets/context-engineering-hero.svg
 tags:
   - Introduction
   - English
