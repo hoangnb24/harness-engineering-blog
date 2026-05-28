@@ -12,7 +12,7 @@ secondary_keywords:
   - AI coding agent workflow
 status: "published"
 date: "2026-05-28"
-image: /assets/manifesto-hero.svg
+image: /assets/manifesto-hero.jpg
 tags:
   - Introduction
   - English

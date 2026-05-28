@@ -16,6 +16,7 @@ secondary_keywords:
   - harness engineering
 status: "published"
 date: "2026-05-23"
+image: /assets/agent-repo-hero.jpg
 ---
 
 # What Is an Agent-Ready Repository?

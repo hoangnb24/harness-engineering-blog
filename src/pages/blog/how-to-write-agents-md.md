@@ -10,6 +10,7 @@ secondary_keywords:
   - repo context for coding agents
 status: "published"
 date: "2026-05-28"
+image: /assets/agents-md-hero.jpg
 tags:
   - How-to
   - English
