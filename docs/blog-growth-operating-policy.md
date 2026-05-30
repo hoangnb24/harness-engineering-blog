@@ -101,5 +101,5 @@ When changes are published, report:
 ## Current production URL
 
 ```text
-https://harness-engineering-blog.pages.dev
+https://codeharness.kuckit.dev
 ```

@@ -41,7 +41,7 @@ Use this when you want every push to `main` to deploy automatically.
 9. After the first deploy, Cloudflare will provide a URL like:
 
    ```text
-   https://harness-engineering-blog.pages.dev
+   https://codeharness.kuckit.dev
    ```
 
 10. Update these files with the production URL if it differs:
@@ -119,13 +119,13 @@ After Cloudflare creates the Pages project:
 1. Visit the canonical production URL:
 
    ```text
-   https://harness-engineering-blog.pages.dev
+   https://codeharness.kuckit.dev
    ```
 
    Wrangler may also print a deployment-specific preview URL like:
 
    ```text
-   https://<deployment-hash>.harness-engineering-blog.pages.dev
+   https://<deployment-hash>.codeharness.kuckit.dev
    ```
 
    Prefer the canonical project URL for sharing unless you specifically need to inspect one immutable preview deploy.
@@ -145,24 +145,24 @@ After Cloudflare creates the Pages project:
 5. Set the GitHub repository homepage to the production URL:
 
    ```bash
-   gh repo edit hoangnb24/harness-engineering-blog --homepage https://harness-engineering-blog.pages.dev
+   gh repo edit hoangnb24/harness-engineering-blog --homepage https://codeharness.kuckit.dev
    ```
 
-6. Later, after a custom domain is chosen, update Cloudflare Pages custom domains and replace the `.pages.dev` URL in config/docs.
+6. Later, after a custom domain is chosen, update Cloudflare Pages custom domains and replace the `pages.dev` URL in config/docs.
 
 ## Troubleshooting first deploy access
 
 If the deployment-specific preview URL does not load immediately, try the canonical project URL first:
 
 ```text
-https://harness-engineering-blog.pages.dev
+https://codeharness.kuckit.dev
 ```
 
 For a brand-new Pages project, DNS/TLS propagation can briefly lag right after Wrangler prints the deployment URL. Re-check after a minute and test with:
 
 ```bash
-curl -I -L https://harness-engineering-blog.pages.dev
-curl -I -L https://<deployment-hash>.harness-engineering-blog.pages.dev
+curl -I -L https://codeharness.kuckit.dev
+curl -I -L https://<deployment-hash>.codeharness.kuckit.dev
 ```
 
 A successful response should be `HTTP/2 200`.
@@ -172,7 +172,7 @@ A successful response should be `HTTP/2 200`.
 - The current production placeholder in `astro.config.mjs` is:
 
   ```text
-  https://harness-engineering-blog.pages.dev
+  https://codeharness.kuckit.dev
   ```
 
 - If Cloudflare gives a different generated URL, prefer that exact URL until a custom domain is configured.

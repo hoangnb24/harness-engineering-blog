@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://harness-engineering-blog.pages.dev/sitemap-index.xml
+Sitemap: https://codeharness.kuckit.dev/sitemap-index.xml
