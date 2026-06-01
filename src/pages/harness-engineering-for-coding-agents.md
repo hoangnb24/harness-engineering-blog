@@ -218,4 +218,32 @@ If yes, write the next story packet with slightly more structure. The harness gr
 
 ---
 
+## FAQ
+
+### What is the difference between harness engineering and context engineering?
+
+Context engineering is the foundation — it makes the repository legible to agents. Harness engineering is the operational layer — it structures how work enters, flows through, and exits the repo. You need both: context engineering answers "what does the repo know?", harness engineering answers "what process makes agent output reliable?"
+
+### Does harness engineering require a specific tool or framework?
+
+No. Story packets, decision records, and validation matrices are just Markdown files. The workflow is tool-agnostic. You can start with a shared Google Doc or a folder of `.md` files and move to a more structured system later.
+
+### How is this different from agile or sprint planning?
+
+Sprint planning organizes work for humans. Harness engineering structures work specifically for AI coding agents — the delivery format, validation criteria, and review process are designed around agent capabilities and failure modes, not human workflow preferences.
+
+### When should I skip the story packet?
+
+Small, low-risk changes — a docs fix, a small CSS adjustment, a typo correction — do not need a full story packet. Use a lightweight note instead: what to change and which file. The harness scales with the stakes of the change.
+
+### How do I know if the harness is working?
+
+Measure: are agent outputs more focused? Fewer rework cycles? More reviewable diffs? If agents keep needing the same clarification repeatedly, that is a signal the harness needs more context for that class of task.
+
+### Does harness engineering replace code review?
+
+No. Human review is still required for every change. The harness makes agent output easier to review — more focused diffs, clear acceptance criteria, documented decisions — but humans still decide whether to merge.
+
+---
+
 *See also: [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/) — the foundational framework. [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the repo-level checklist. [How to Write AGENTS.md That Actually Works](/blog/how-to-write-agents-md/) — the repo instruction template.*
