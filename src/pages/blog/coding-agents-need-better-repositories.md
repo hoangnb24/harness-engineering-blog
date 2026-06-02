@@ -105,7 +105,7 @@ A good repository for coding agents gives agents the same context a good onboard
 
 This is not a giant document. A useful version fits on one screen.
 
-The `harness-experimental` project is one attempt at encoding this for real repositories. It provides templates, checklists, and structural conventions that agents can read at the start of every session.
+The `repository-harness` project is one attempt at encoding this for real repositories. It provides templates, checklists, and structural conventions that agents can read at the start of every session.
 
 ---
 
@@ -161,7 +161,7 @@ Audit your current repository. Open the repo as if you were a coding agent seein
 
 That gap is what repo context should fill.
 
-Try `harness-experimental` as a starting point for adding this structure to your own projects. Or open an issue with a failure case — sharing what went wrong in a coding-agent session helps the community build better patterns.
+Try `repository-harness` as a starting point for adding this structure to your own projects. Or open an issue with a failure case — sharing what went wrong in a coding-agent session helps the community build better patterns.
 
 ---
 

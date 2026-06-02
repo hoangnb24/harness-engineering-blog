@@ -295,9 +295,9 @@ The best workflow combines both:
 
 ---
 
-## How harness-experimental helps
+## How repository-harness helps
 
-[`harness-experimental`](https://github.com/hoangnb24/harness-experimental) is an open-source experiment in turning a normal repo into an agent-ready workspace.
+[`repository-harness`](https://github.com/hoangnb24/repository-harness) is an open-source experiment in turning a normal repo into an agent-ready workspace.
 
 It is designed for developers using Claude Code, Codex, Cursor, and other coding agents.
 
@@ -315,7 +315,7 @@ The idea is simple:
 
 > The app is what users touch. The harness is what agents touch.
 
-If you are experimenting with coding agents in real repositories, you can use `harness-experimental` as a starting point and adapt the templates to your own project.
+If you are experimenting with coding agents in real repositories, you can use `repository-harness` as a starting point and adapt the templates to your own project.
 
 ---
 
@@ -465,6 +465,6 @@ If you want to make your own repo more agent-ready, start with this checklist:
 
 Or explore the open-source starting point:
 
-[`harness-experimental` on GitHub](https://github.com/hoangnb24/harness-experimental)
+[`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness)
 
 If it helps your workflow, a star helps other developers discover it.
