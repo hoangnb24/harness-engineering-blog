@@ -1,15 +1,16 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 
-const { frontmatter = {} } = Astro.props;
+const { frontmatter = {}, url = '' } = Astro.props;
 const pageTitle = frontmatter.title ?? 'CodeHarness';
 const title = frontmatter.title ? `${frontmatter.title} | CodeHarness` : 'CodeHarness';
 const description = frontmatter.description ?? 'Stories, tests, and practical notes from building with AI coding agents.';
 const date = frontmatter.date;
 const status = frontmatter.status;
 const heroImage = frontmatter.image;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://codeharness.kuckit.dev').toString();
 ---
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
   <div slot="site-title">CodeHarness</div>
   <article class="notion-page">
     <header class="article-header">
