@@ -12,6 +12,7 @@ secondary_keywords:
   - agent-ready repository workflow
 status: "published"
 date: "2026-05-28"
+image: /assets/harness-engineering-hero.jpg
 tags:
   - How-to
   - English
