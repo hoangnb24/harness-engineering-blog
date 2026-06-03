@@ -240,6 +240,18 @@ Yes. If AGENTS.md is more than a screen of text, cut detail and link to deeper d
 
 Treat repo context like code: it is owned, it has tests (the validation loop), and it gets updated when failure cases are discovered. When an agent makes a mistake twice, update the repo.
 
+### What's the minimum context needed for a small repo?
+
+Even a small repo benefits from three things: an AGENTS.md file with project overview and validation commands, a one-paragraph architecture note, and a list of safety boundaries (what not to touch). That's enough to prevent the most common agent failure modes.
+
+### How does context engineering differ from RAG?
+
+RAG (Retrieval-Augmented Generation) pulls documents into the prompt at runtime. Context engineering places durable context in the repository itself so agents encounter it naturally without runtime retrieval. Both can be used together — RAG for dynamic information, repo context for stable operating knowledge.
+
+### Can context engineering help with multi-agent workflows?
+
+Yes. When multiple agents work in the same repo, shared repo context (AGENTS.md, decision records, validation matrix) ensures all agents operate from the same constraints. This is especially valuable for repos where different agents handle different subsystems.
+
 ---
 
 ## Start today
