@@ -467,4 +467,10 @@ Or explore the open-source starting point:
 
 [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness)
 
-If it helps your workflow, a star helps other developers discover it.
+---
+
+## Related pages
+
+- [How to Write an AGENTS.md That Actually Works](/blog/how-to-write-agents-md/) — the writing guide
+- [AGENTS.md Template](/agents-md-template/) — copy and adapt for your project
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation

@@ -204,8 +204,20 @@ That is the minimum viable setup. Run a session and watch where Claude Code need
 
 ---
 
+---
+
+## Related pages
+
+- [What Is an Agent-Ready Repository?](/agent-ready-repository/) — foundational concept
+- [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/) — the parent pillar page
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
+
+---
+
 ## See also
 
 - [How to Write an AGENTS.md That Actually Works](/blog/how-to-write-agents-md/) — the full template and writing guide
+- [AGENTS.md Template](/agents-md-template/) — copy and adapt for your project
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
 - [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the broader checklist
 - [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/) — the framework behind this

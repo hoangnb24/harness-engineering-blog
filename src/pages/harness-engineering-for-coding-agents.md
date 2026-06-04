@@ -247,4 +247,12 @@ No. Human review is still required for every change. The harness makes agent out
 
 ---
 
+## Related pages
+
+- [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/) — the parent pillar page
+- [What Is an Agent-Ready Repository?](/agent-ready-repository/) — foundational concept
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
+
+---
+
 *See also: [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/) — the foundational framework. [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the repo-level checklist. [How to Write AGENTS.md That Actually Works](/blog/how-to-write-agents-md/) — the repo instruction template.*

@@ -262,4 +262,12 @@ Then run one coding-agent task and watch what the agent needs that you did not p
 
 ---
 
+## Related pages
+
+- [What Is an Agent-Ready Repository?](/agent-ready-repository/) — foundational concept
+- [Harness Engineering for Coding Agents](/harness-engineering-for-coding-agents/) — operational workflow
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
+
+---
+
 *See also: [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the practical checklist for making any repository more legible to AI coding agents. Also see [How to Write AGENTS.md That Actually Works](/blog/how-to-write-agents-md/) for a template and writing guide.*

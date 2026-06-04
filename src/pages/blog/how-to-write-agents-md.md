@@ -166,3 +166,11 @@ Iterate from there.
 ---
 
 *See also: [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the broader context for why AGENTS.md alone is not enough, but is the right starting point.*
+
+---
+
+## Related pages
+
+- [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the foundational concept behind AGENTS.md
+- [AGENTS.md Template](/agents-md-template/) — copy and adapt for your own project
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation

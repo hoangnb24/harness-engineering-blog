@@ -154,4 +154,12 @@ The key insight: **context that only lives in your IDE is context that disappear
 
 ---
 
+## Related pages
+
+- [How to Write an AGENTS.md That Actually Works](/blog/how-to-write-agents-md/) — practical guide
+- [AGENTS.md Template](/agents-md-template/) — copy and adapt for your project
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
+
+---
+
 *Both approaches reflect the same underlying insight: coding agents work better when the repository tells them what they need to know. The question is just where you put that information, and who you want it to serve.*

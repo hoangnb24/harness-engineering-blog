@@ -165,4 +165,12 @@ Try `repository-harness` as a starting point for adding this structure to your o
 
 ---
 
+## Related pages
+
+- [What Is an Agent-Ready Repository?](/agent-ready-repository/) — foundational concept
+- [AGENTS.md Template](/agents-md-template/) — copy and adapt for your project
+- [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
+
+---
+
 *See also: [What Is an Agent-Ready Repository?](/agent-ready-repository/) — a practical checklist and reference for making any repository more legible to AI coding agents.*
