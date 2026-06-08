@@ -266,6 +266,7 @@ Then run one coding-agent task and watch what the agent needs that you did not p
 
 - [What Is an Agent-Ready Repository?](/agent-ready-repository/) — foundational concept
 - [Harness Engineering for Coding Agents](/harness-engineering-for-coding-agents/) — operational workflow
+- [AGENTS.md Template](/agents-md-template/) — copy and adapt the starting file
 - [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
 
 ---

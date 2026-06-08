@@ -1,5 +1,40 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const faqs = [
+  {
+    q: 'What should be in an AGENTS.md file?',
+    a: 'A useful AGENTS.md answers five questions: what the project does, what commands prove a change is correct, what files or areas agents must not touch, which directories map to which concerns, and which decisions are already made and should not be reopened. Keep it under a screen of text and link to deeper docs when detail is needed.'
+  },
+  {
+    q: 'How long should an AGENTS.md file be?',
+    a: 'Aim for a single screen of text — roughly 60 to 120 lines. Anything longer and agents start skimming or ignoring sections. Put durable, repo-wide rules at the top. Link to architecture docs, decision records, and testing guides instead of inlining them.'
+  },
+  {
+    q: 'Is AGENTS.md the same as README.md?',
+    a: 'No. README.md is for humans joining the project. AGENTS.md is for coding agents entering the project. The two overlap, but README.md explains how to run, build, and contribute, while AGENTS.md encodes operating constraints, validation rules, and safety boundaries that an agent must respect on every change.'
+  },
+  {
+    q: 'Where should AGENTS.md live in the repo?',
+    a: 'At the repository root: <code>./AGENTS.md</code>. Some tools also pick up <code>./.github/AGENTS.md</code> or <code>./docs/AGENTS.md</code>, but the root location is the universal default. Keep it short enough that the file name alone signals "read me first".'
+  },
+  {
+    q: 'Does Claude Code read AGENTS.md?',
+    a: 'Yes. Claude Code reads AGENTS.md from the repository root at the start of every session. You can also drop tool-specific commands in <code>.claude/commands.md</code> for Claude Code-only behavior. The same AGENTS.md is also picked up by Codex-based tools, Aider (with <code>--read</code>), and most modern coding agents.'
+  },
+  {
+    q: 'How is AGENTS.md different from Cursor rules?',
+    a: 'AGENTS.md is a single file at the repo root that travels with the code and is read by every coding agent that enters the repo. Cursor rules live in <code>.cursor/rules/</code> and apply only to the Cursor IDE on a given developer machine. Use AGENTS.md for repo-wide context. Use Cursor rules for personal IDE preferences that should not be committed to the repo.'
+  },
+  {
+    q: 'Can I use this template for a small personal project?',
+    a: 'Yes. Even a 200-line project benefits from a one-screen AGENTS.md that says what the project does, which command runs the tests, and which files are risky. Small projects often have the worst repo context because nobody bothers to document anything, and agents fill the gap with guesses.'
+  },
+  {
+    q: 'How do I keep AGENTS.md from going stale?',
+    a: 'Treat it like code: review changes in pull requests, update it when an agent makes the same mistake twice, and link from it to decision records so the why lives in version control. When a section stops being useful, delete it. The file should always reflect the current operating contract, not the original author\'s good intentions.'
+  }
+];
 ---
 <BaseLayout title="AGENTS.md Template" description="A practical AGENTS.md template for agent-ready repositories — copy and adapt for Claude Code, Codex, Cursor, and other coding agents.">
   <article>
@@ -114,8 +149,72 @@ Out of scope:
     </ul>
 
     <p><a href="/agent-ready-repository/">Learn why this matters →</a></p>
+
+    <h2>When to fill in which section</h2>
+    <p>Not every section belongs in every repo. A quick decision guide:</p>
+    <ul>
+      <li><strong>Solo side project (under 1,000 lines):</strong> Project overview, Commands, What not to touch. Skip the rest.</li>
+      <li><strong>Small team repo (1k–20k lines):</strong> All of the above plus Architecture map and Validation matrix.</li>
+      <li><strong>Multi-team production service:</strong> All sections, plus Decisions that are already made and a Story packet template.</li>
+      <li><strong>Library or framework:</strong> All sections, with extra weight on Public API stability and "do not change public APIs without updating tests and docs".</li>
+    </ul>
+
+    <h2>FAQ</h2>
+
+    <h3>What should be in an AGENTS.md file?</h3>
+    <p>A useful AGENTS.md answers five questions: what the project does, what commands prove a change is correct, what files or areas agents must not touch, which directories map to which concerns, and which decisions are already made and should not be reopened. Keep it under a screen of text and link to deeper docs when detail is needed.</p>
+
+    <h3>How long should an AGENTS.md file be?</h3>
+    <p>Aim for a single screen of text — roughly 60 to 120 lines. Anything longer and agents start skimming or ignoring sections. Put durable, repo-wide rules at the top. Link to architecture docs, decision records, and testing guides instead of inlining them.</p>
+
+    <h3>Is AGENTS.md the same as README.md?</h3>
+    <p>No. README.md is for humans joining the project. AGENTS.md is for coding agents entering the project. The two overlap, but README.md explains how to run, build, and contribute, while AGENTS.md encodes operating constraints, validation rules, and safety boundaries that an agent must respect on every change.</p>
+
+    <h3>Where should AGENTS.md live in the repo?</h3>
+    <p>At the repository root: <code>./AGENTS.md</code>. Some tools also pick up <code>./.github/AGENTS.md</code> or <code>./docs/AGENTS.md</code>, but the root location is the universal default. Keep it short enough that the file name alone signals "read me first".</p>
+
+    <h3>Does Claude Code read AGENTS.md?</h3>
+    <p>Yes. Claude Code reads AGENTS.md from the repository root at the start of every session. You can also drop tool-specific commands in <code>.claude/commands.md</code> for Claude Code-only behavior. The same AGENTS.md is also picked up by Codex-based tools, Aider (with <code>--read</code>), and most modern coding agents.</p>
+
+    <h3>How is AGENTS.md different from Cursor rules?</h3>
+    <p>AGENTS.md is a single file at the repo root that travels with the code and is read by every coding agent that enters the repo. Cursor rules live in <code>.cursor/rules/</code> and apply only to the Cursor IDE on a given developer machine. Use AGENTS.md for repo-wide context. Use Cursor rules for personal IDE preferences that should not be committed to the repo.</p>
+
+    <h3>Can I use this template for a small personal project?</h3>
+    <p>Yes. Even a 200-line project benefits from a one-screen AGENTS.md that says what the project does, which command runs the tests, and which files are risky. Small projects often have the worst repo context because nobody bothers to document anything, and agents fill the gap with guesses.</p>
+
+    <h3>How do I keep AGENTS.md from going stale?</h3>
+    <p>Treat it like code: review changes in pull requests, update it when an agent makes the same mistake twice, and link from it to decision records so the why lives in version control. When a section stops being useful, delete it. The file should always reflect the current operating contract, not the original author's good intentions.</p>
+
+    <h2>Related pages</h2>
+    <ul>
+      <li><a href="/agent-ready-repository/">What Is an Agent-Ready Repository?</a> — the broader checklist that AGENTS.md is part of</li>
+      <li><a href="/context-engineering-for-coding-agents/">Context Engineering for Coding Agents</a> — the framework that AGENTS.md implements</li>
+      <li><a href="/harness-engineering-for-coding-agents/">Harness Engineering for Coding Agents</a> — how AGENTS.md fits into the larger workflow</li>
+      <li><a href="/blog/how-to-write-agents-md/">How to Write an AGENTS.md That Actually Works</a> — the writing guide that pairs with this template</li>
+      <li><a href="/blog/agents-md-vs-cursor-rules/">AGENTS.md vs Cursor Rules</a> — when to use AGENTS.md and when to use IDE-specific rules</li>
+      <li><a href="/blog/prepare-repo-for-claude-code/">How to Prepare Your Repository for Claude Code</a> — Claude Code-specific setup that uses this template</li>
+      <li><a href="/blog/prepare-repo-for-codex/">How to Prepare Your Repository for Codex</a> — Codex-specific setup that uses this template</li>
+      <li><a href="/blog/coding-agents-need-better-repositories/">Coding Agents Need Better Repositories, Not Just Better Prompts</a> — the argument for why templates like this matter</li>
+    </ul>
+
+    <p><em>See also: <a href="/projects/repository-harness/">repository-harness</a> — the open-source starting point that bundles this template with architecture notes, decision records, and a validation matrix.</em></p>
   </article>
 </BaseLayout>
+
+<script type="application/ld+json" is:inline define:vars={{ faqs }}>
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(f => ({
+    "@type": "Question",
+    "name": f.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": f.a
+    }
+  }))
+}
+</script>
 
 <style>
   .lead {
@@ -146,5 +245,10 @@ Out of scope:
   h2 {
     margin-top: 2em;
     margin-bottom: 0.75em;
+  }
+  h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-size: 1.05rem;
   }
 </style>
