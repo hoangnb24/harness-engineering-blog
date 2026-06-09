@@ -19,6 +19,9 @@ tags:
   - English
 ---
 
+<!-- FAQPage JSON-LD for GEO/AI citation -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Should I use AGENTS.md or Cursor Rules?","acceptedAnswer":{"@type":"Answer","text":"Use AGENTS.md for repository-level context that every coding agent should know. Use Cursor Rules for personal IDE preferences that should not be committed. For most teams with more than one person or more than one tool, start with AGENTS.md."}},{"@type":"Question","name":"Can AGENTS.md and Cursor Rules coexist?","acceptedAnswer":{"@type":"Answer","text":"Yes. They are not mutually exclusive. Put repo-wide rules in AGENTS.md at the repository root, and use Cursor Rules for personal IDE workflows, formatting preferences, and tool-specific overrides that should not be shared."}},{"@type":"Question","name":"Does Claude Code read AGENTS.md?","acceptedAnswer":{"@type":"Answer","text":"Yes. Claude Code reads AGENTS.md at the repository root at the start of every session. It does not read .cursor/rules/ because that is a Cursor-only feature."}},{"@type":"Question","name":"Does Cursor read AGENTS.md?","acceptedAnswer":{"@type":"Answer","text":"Yes. Cursor reads AGENTS.md at the repository root in addition to .cursor/rules/. Treat AGENTS.md as the canonical cross-tool context and .cursor/rules/ as Cursor-specific overrides."}},{"@type":"Question","name":"Where do AGENTS.md and Cursor Rules live?","acceptedAnswer":{"@type":"Answer","text":"AGENTS.md lives at the repository root: ./AGENTS.md. It travels with the code in version control. Cursor Rules live in .cursor/rules/ inside the user's local checkout and are not committed unless exported and added manually."}},{"@type":"Question","name":"Is AGENTS.md better than Cursor Rules for open source?","acceptedAnswer":{"@type":"Answer","text":"Yes, for open source repositories. External contributors will arrive with different IDEs and tools. AGENTS.md ensures every contributor — and every coding agent they bring with them — gets the same context. Cursor Rules only help if the contributor happens to use Cursor."}},{"@type":"Question","name":"Do I need both for a small personal project?","acceptedAnswer":{"@type":"Answer","text":"For a 200-line personal project, AGENTS.md is enough. Cursor Rules add value when you want personal IDE behavior that should not leak into the repo. If you only use Cursor and never expect collaborators, Cursor Rules alone are fine, but you will lose the context if you switch tools."}}]}</script>
+
 # AGENTS.md vs Cursor Rules: Which One Does Your Repository Actually Need?
 
 Both AGENTS.md and Cursor Rules are attempts to solve the same problem: **coding agents do not know what they need to know when they enter a repository.**
@@ -143,6 +146,38 @@ If your repository is used by more than one person, more than one tool, or will 
 If you are a solo developer who lives entirely in Cursor and want quick local overrides: **Cursor Rules are convenient, but document them somewhere permanent.**
 
 The key insight: **context that only lives in your IDE is context that disappears when you change tools.**
+
+---
+
+## Frequently Asked Questions
+
+### Should I use AGENTS.md or Cursor Rules?
+
+Use AGENTS.md for repository-level context that every coding agent should know. Use Cursor Rules for personal IDE preferences that should not be committed. For most teams with more than one person or more than one tool, start with AGENTS.md.
+
+### Can AGENTS.md and Cursor Rules coexist?
+
+Yes. They are not mutually exclusive. Put repo-wide rules in AGENTS.md at the repository root, and use Cursor Rules for personal IDE workflows, formatting preferences, and tool-specific overrides that should not be shared.
+
+### Does Claude Code read AGENTS.md?
+
+Yes. Claude Code reads AGENTS.md at the repository root at the start of every session. It does not read `.cursor/rules/` because that is a Cursor-only feature.
+
+### Does Cursor read AGENTS.md?
+
+Yes. Cursor reads AGENTS.md at the repository root in addition to `.cursor/rules/`. Treat AGENTS.md as the canonical cross-tool context and `.cursor/rules/` as Cursor-specific overrides.
+
+### Where do AGENTS.md and Cursor Rules live?
+
+AGENTS.md lives at the repository root: `./AGENTS.md`. It travels with the code in version control. Cursor Rules live in `.cursor/rules/` inside the user's local checkout and are not committed unless exported and added manually.
+
+### Is AGENTS.md better than Cursor Rules for open source?
+
+Yes, for open source repositories. External contributors will arrive with different IDEs and tools. AGENTS.md ensures every contributor — and every coding agent they bring with them — gets the same context. Cursor Rules only help if the contributor happens to use Cursor.
+
+### Do I need both for a small personal project?
+
+For a 200-line personal project, AGENTS.md is enough. Cursor Rules add value when you want personal IDE behavior that should not leak into the repo. If you only use Cursor and never expect collaborators, Cursor Rules alone are fine, but you will lose the context if you switch tools.
 
 ---
 
