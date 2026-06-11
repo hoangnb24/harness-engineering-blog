@@ -18,6 +18,9 @@ tags:
   - English
 ---
 
+<!-- FAQPage JSON-LD for GEO/AI citation -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Are better prompts still useful for coding agents?","acceptedAnswer":{"@type":"Answer","text":"Yes. Prompts describe the current task. Repo context provides durable operating environment. Both are necessary. The mistake is confusing the two — using prompts to carry context that should live in the repo."}},{"@type":"Question","name":"What repo context matters most?","acceptedAnswer":{"@type":"Answer","text":"Exact validation commands. Most agent failures happen because the agent did not know which checks to run. If nothing else, make sure every repository makes clear exactly how to validate a change before handing it back."}},{"@type":"Question","name":"How does this apply to small repositories?","acceptedAnswer":{"@type":"Answer","text":"Even more so. Small repos often have less documented architecture, which means agents infer more and guess more. An AGENTS.md file costs 30 minutes and prevents a lot of wasted iteration."}},{"@type":"Question","name":"Is agent-ready repository context only for autonomous agents?","acceptedAnswer":{"@type":"Answer","text":"No. Human-guided agents benefit just as much. Humans still decide what to build, but agents that have good repo context make better suggestions, ask better questions, and produce more reviewable changes."}}]}</script>
+
 # Coding Agents Need Better Repositories, Not Just Better Prompts
 
 The most common way teams try to improve coding agents is with better prompts.
