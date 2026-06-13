@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>repository-harness — agent-ready repos for the agent-first world</title>
+
+<!-- reveal.js 5.x from CDN, pinned -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+
+<style>
+  /* === repository-harness deck theme === */
+  :root {
+    --ink: #f4f4f5;
+    --ink-dim: #a1a1aa;
+    --ink-mute: #71717a;
+    --bg: #09090b;
+    --bg-2: #18181b;
+    --bg-3: #27272a;
+    --line: #3f3f46;
+    --accent: #10b981;        /* emerald-500, the "harness" color */
+    --accent-2: #06b6d4;      /* cyan-500, the "model" color */
+    --warn: #f59e0b;          /* amber-500, partial/h3/h5 */
+    --danger: #ef4444;        /* red-500, missing */
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .reveal-viewport { background: var(--bg); }
+
+  .reveal {
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 26px;
+    line-height: 1.45;
+  }
+
+  .reveal .slides { text-align: left; }
+
+  .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+    color: var(--ink);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    text-shadow: none;
+  }
+
+  .reveal h1 { font-size: 1.9em; line-height: 1.1; margin: 0 0 0.4em; }
+  .reveal h2 { font-size: 1.5em; line-height: 1.15; margin: 0 0 0.4em; }
+  .reveal h3 { font-size: 1.15em; color: var(--ink-dim); margin: 0 0 0.3em; }
+
+  .reveal p, .reveal li { color: var(--ink); }
+  .reveal strong { color: var(--ink); font-weight: 600; }
+  .reveal em { color: var(--ink-dim); font-style: italic; }
+
+  .reveal a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+  .reveal a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .reveal pre, .reveal code {
+    font-family: var(--mono);
+    background: var(--bg-2);
+    border-radius: 6px;
+  }
+  .reveal pre {
+    font-size: 0.55em;
+    line-height: 1.35;
+    padding: 16px 20px;
+    width: 100%;
+    box-shadow: none;
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .reveal pre code { background: transparent; padding: 0; color: var(--ink); }
+  .reveal code { padding: 0 6px; font-size: 0.85em; color: var(--accent); }
+
+  .reveal .accent  { color: var(--accent); }
+  .reveal .accent2 { color: var(--accent-2); }
+  .reveal .dim     { color: var(--ink-dim); }
+  .reveal .mute    { color: var(--ink-mute); }
+  .reveal .warn    { color: var(--warn); }
+  .reveal .danger  { color: var(--danger); }
+
+  /* === layout primitives === */
+  .reveal section.stack { text-align: left; }
+  .reveal section .row { display: flex; gap: 24px; align-items: flex-start; }
+  .reveal section .col { flex: 1 1 0; min-width: 0; }
+  .reveal section .col-2 { flex: 2 1 0; }
+  .reveal section .col-3 { flex: 3 1 0; }
+  .reveal section .pad-12 { padding-top: 12px; }
+  .reveal section .pad-24 { padding-top: 24px; }
+  .reveal section .small { font-size: 0.7em; }
+  .reveal section .tiny  { font-size: 0.55em; }
+  .reveal section .quote { font-style: italic; color: var(--ink-dim); border-left: 3px solid var(--accent); padding-left: 14px; }
+  .reveal section .src   { color: var(--ink-mute); font-size: 0.6em; }
+  .reveal section .src a { color: var(--ink-mute); border-bottom: 1px dotted var(--ink-mute); }
+
+  /* the title slide */
+  .reveal section.title-slide { text-align: center; }
+  .reveal section.title-slide h1 { font-size: 2.2em; }
+  .reveal section.title-slide .sub { color: var(--ink-dim); font-size: 0.7em; margin-top: 18px; }
+  .reveal section.title-slide .by  { color: var(--ink-mute); font-size: 0.55em; margin-top: 28px; letter-spacing: 0.04em; }
+
+  /* diagram boxes */
+  .reveal .box {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 0.8em;
+  }
+  .reveal .box.accent  { border-color: var(--accent); }
+  .reveal .box.accent2 { border-color: var(--accent-2); }
+  .reveal .box.warn    { border-color: var(--warn); }
+  .reveal .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .reveal .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .reveal .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+
+  /* the H0–H5 ladder */
+  .reveal .hladder { display: grid; grid-template-columns: 80px 1fr 90px; gap: 8px 14px; align-items: center; font-size: 0.7em; }
+  .reveal .hladder .h0 { background: var(--bg-3); color: var(--ink-dim); padding: 8px 10px; border-radius: 4px; text-align: center; }
+  .reveal .hladder .h1 { background: var(--bg-3); color: var(--ink-dim); padding: 8px 10px; border-radius: 4px; text-align: center; }
+  .reveal .hladder .h2 { background: var(--bg-3); color: var(--ink-dim); padding: 8px 10px; border-radius: 4px; text-align: center; }
+  .reveal .hladder .h3 { background: var(--bg-3); color: var(--ink-dim); padding: 8px 10px; border-radius: 4px; text-align: center; }
+  .reveal .hladder .h4 { background: var(--accent); color: var(--bg); padding: 8px 10px; border-radius: 4px; text-align: center; font-weight: 600; }
+  .reveal .hladder .h5 { background: var(--warn); color: var(--bg); padding: 8px 10px; border-radius: 4px; text-align: center; font-weight: 600; }
+  .reveal .hladder .label { color: var(--ink); }
+  .reveal .hladder .status-ok    { color: var(--accent); text-align: center; font-weight: 600; }
+  .reveal .hladder .status-warn  { color: var(--warn);   text-align: center; font-weight: 600; }
+
+  /* the benchmark bar chart */
+  .reveal .barchart { font-family: var(--mono); font-size: 0.7em; line-height: 1.6; }
+  .reveal .barchart .bar { color: var(--accent); }
+  .reveal .barchart .num  { color: var(--ink); }
+  .reveal .barchart .lbl  { color: var(--ink-dim); }
+  .reveal .barchart .head { color: var(--ink-dim); }
+
+  /* the two columns of code (bare vs harness) */
+  .reveal .twoterm { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .reveal .twoterm .term h4 { font-size: 0.7em; margin: 0 0 8px; color: var(--ink-dim); }
+  .reveal .twoterm pre { font-size: 0.42em; line-height: 1.3; }
+
+  /* reveal.js overrides */
+  .reveal .controls { color: var(--ink-dim); }
+  .reveal .progress { background: var(--bg-3); color: var(--accent); height: 4px; }
+  .reveal .slide-number { color: var(--ink-mute); font-size: 14px; right: 18px; bottom: 12px; }
+  .reveal .slide-number a { color: var(--ink-mute); }
+  .reveal .fragment { opacity: 0.15; transition: opacity 0.3s ease; }
+  .reveal .fragment.visible { opacity: 1; }
+
+  /* print PDF: just everything black on white, no fragment fade */
+  @media print {
+    .reveal { color: #000; }
+    .reveal .fragment { opacity: 1 !important; }
+    .reveal pre { background: #f4f4f5; color: #000; border-color: #d4d4d8; }
+    .reveal .box { background: #f4f4f5; border-color: #d4d4d8; color: #000; }
+  }
+</style>
+</head>
+<body>
+
+<div class="reveal">
+<div class="slides">
+
+<!-- ================================================================
+     1. TITLE
+     ================================================================ -->
+<section class="title-slide" data-state="title">
+  <h1>repository-harness</h1>
+  <p class="dim" style="font-size: 0.85em; margin-top: 6px;">Agent-ready repos for the agent-first world</p>
+  <p class="sub">a meta-harness for Claude Code, Codex, Cursor, and any coding agent</p>
+  <p class="by">Hoang &middot; kuckit.dev &middot; github.com/hoangnb24/repository-harness &middot; 2026</p>
+  <aside class="notes">
+    30-second opener. Introduce yourself. "I'm going to show you something that
+    took OpenAI from 0 lines of manual code to 1 million lines, took us from
+    80% harness compliance to 100%, and I think will change how you ship
+    software with AI this year. The thesis: coding agents don't only need
+    better prompts — they need better repositories."
+  </aside>
+</section>
+
+<!-- ================================================================
+     2. THE SHIFT (OpenAI framing)
+     ================================================================ -->
+<section>
+  <h2>The shift <span class="dim" style="font-size:0.6em">— OpenAI, Feb 2026</span></h2>
+  <p class="quote">"Humans steer. Agents execute." <span class="src">— Ryan Lopopolo, OpenAI</span></p>
+
+  <div class="grid-3 pad-24">
+    <div class="box"><div class="dim tiny">LOC SHIPPED</div><div class="accent" style="font-size:1.6em; font-family:var(--mono);">1,000,000</div><div class="dim tiny">in 5 months</div></div>
+    <div class="box"><div class="dim tiny">PULL REQUESTS</div><div class="accent" style="font-size:1.6em; font-family:var(--mono);">~1,500</div><div class="dim tiny">3 → 7 engineers</div></div>
+    <div class="box"><div class="dim tiny">THROUGHPUT</div><div class="accent" style="font-size:1.6em; font-family:var(--mono);">3.5 PRs</div><div class="dim tiny">per engineer / day</div></div>
+  </div>
+
+  <p class="src pad-12">Source: <a href="https://openai.com/index/harness-engineering/">openai.com/index/harness-engineering/</a></p>
+
+  <aside class="notes">
+    OpenAI's team shipped a 1M-line product with 0 lines of manually-written
+    code. The whole thing — application, tests, CI, docs, observability,
+    internal tooling — was written by Codex. They did it in 1/10th the time
+    it would have taken by hand, and throughput *increased* as the team grew
+    from 3 to 7 engineers. That's the counter-intuitive bit. More agents,
+    not fewer humans. But the job changes. The human's job becomes designing
+    the environment, not writing code.
+  </aside>
+</section>
+
+<!-- ================================================================
+     3. THE EQUATION (LangChain framing)
+     ================================================================ -->
+<section>
+  <h2>The equation <span class="dim" style="font-size:0.6em">— LangChain, Mar 2026</span></h2>
+
+  <pre style="text-align:center; font-size:0.9em; padding: 24px 20px;"><code><span class="accent2">Agent</span> = <span class="accent">Model</span> + <span class="accent">Harness</span></code></pre>
+
+  <p class="quote">"If you're not the model, you're the harness." <span class="src">— Vivek Trivedy, LangChain</span></p>
+
+  <ul style="font-size: 0.8em;">
+    <li class="dim"><strong style="color:var(--ink)">System prompts</strong> &mdash; what you tell the model about its job</li>
+    <li class="dim"><strong style="color:var(--ink)">Tools, skills, MCPs</strong> &mdash; what the model can call</li>
+    <li class="dim"><strong style="color:var(--ink)">Bundled infrastructure</strong> &mdash; filesystem, sandbox, browser</li>
+    <li class="dim"><strong style="color:var(--ink)">Orchestration</strong> &mdash; subagent spawning, handoffs, routing</li>
+    <li class="dim"><strong style="color:var(--ink)">Hooks / middleware</strong> &mdash; compaction, lint, verification</li>
+  </ul>
+
+  <p class="src">Source: <a href="https://www.langchain.com/blog/the-anatomy-of-an-agent-harness">langchain.com/blog/the-anatomy-of-an-agent-harness</a></p>
+
+  <aside class="notes">
+    LangChain came out 30 days after OpenAI and said: every piece of code,
+    config, and execution logic that isn't the model itself is the harness.
+    "If you're not the model, you're the harness." That's the cleanest
+    boundary. The model is the only thing that knows what to do; the harness
+    is everything that makes that knowledge *usable*. This is the equation
+    we'll come back to.
+  </aside>
+</section>
+
+<!-- ================================================================
+     4. THE ANATOMY (mapping LangChain primitives → our repo)
+     ================================================================ -->
+<section>
+  <h2>The anatomy, mapped</h2>
+  <p class="dim small">Each LangChain primitive &rarr; where it lives in repository-harness.</p>
+
+  <table style="font-size:0.65em; width:100%; border-collapse: collapse;">
+    <thead>
+      <tr style="color:var(--ink-mute); border-bottom: 1px solid var(--line);">
+        <th style="text-align:left; padding: 8px 6px;">Primitive</th>
+        <th style="text-align:left; padding: 8px 6px;">In our repo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding:6px;">Filesystem + Git</td>      <td style="padding:6px;" class="accent">AGENTS.md, docs/, story packets</td></tr>
+      <tr><td style="padding:6px;">Bundled infrastructure</td><td style="padding:6px;" class="accent">harness.db (SQLite) + harness-cli (Rust)</td></tr>
+      <tr><td style="padding:6px;">Tools / skills</td>        <td style="padding:6px;" class="accent">intake, story, decision, trace, audit, propose</td></tr>
+      <tr><td style="padding:6px;">Orchestration</td>        <td style="padding:6px;" class="accent">intake &rarr; story &rarr; trace &rarr; backlog loop</td></tr>
+      <tr><td style="padding:6px;">Middleware / hooks</td>    <td style="padding:6px;" class="accent">score-context, audit, intervention, score-trace</td></tr>
+      <tr><td style="padding:6px;">Memory + search</td>       <td style="padding:6px;" class="accent">query matrix, query backlog, query tools</td></tr>
+      <tr><td style="padding:6px;">Verification</td>         <td style="padding:6px;" class="accent">story verify, verify-all, validate:quick ladder</td></tr>
+    </tbody>
+  </table>
+
+  <p class="src pad-12">Sources: <a href="https://www.langchain.com/blog/the-anatomy-of-an-agent-harness">LangChain anatomy</a> · our <code>docs/HARNESS.md</code></p>
+
+  <aside class="notes">
+    For each LangChain primitive, here's where we put it in our repo. The
+    important move: we don't ship an agent. We ship the *environment* an
+    agent runs in. That's why repository-harness can be installed into any
+    repo and used with Claude Code, Codex, Cursor, Aider, anything.
+  </aside>
+</section>
+
+<!-- ================================================================
+     5. THE PROBLEM (without our harness)
+     ================================================================ -->
+<section>
+  <h2>The problem</h2>
+  <p class="dim small">Most repos are built for humans reading familiar code.</p>
+
+  <div class="grid-2 pad-24">
+    <div class="box">
+      <h3>What the agent sees</h3>
+      <ul style="font-size:0.8em; margin: 0;">
+        <li>A chat prompt</li>
+        <li>A shallow snapshot of files</li>
+        <li>Maybe a README</li>
+      </ul>
+    </div>
+    <div class="box warn">
+      <h3 class="warn">What goes wrong</h3>
+      <ul style="font-size:0.8em; margin: 0;">
+        <li>Edits code before reading product intent</li>
+        <li>Constraints live only in chat history</li>
+        <li>Validation expectations discovered too late</li>
+        <li>Architecture tradeoffs repeated, not inherited</li>
+        <li>Big requests don't get broken into reviewable stories</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="quote pad-24" style="font-size: 0.9em;">"Early progress was slower than we expected, not because Codex was incapable, but because the environment was underspecified." <span class="src">— OpenAI</span></p>
+
+  <aside class="notes">
+    The failure modes are well known to anyone who's used an agent: it edits
+    before it reads the spec, it repeats the same architectural decisions
+    over and over, the validation step is "I think it works." OpenAI
+    themselves said progress was slow not because the model was weak, but
+    because the *environment* was underspecified. That's the gap our repo
+    fills.
+  </aside>
+</section>
+
+<!-- ================================================================
+     6. THE THESIS (one-liner)
+     ================================================================ -->
+<section>
+  <h2 style="font-size: 2em; line-height: 1.1;">
+    Coding agents don't only need <span class="dim" style="text-decoration: line-through;">better prompts</span>.<br>
+    They need <span class="accent">better repositories</span>.
+  </h2>
+  <p class="src pad-24">— the README's hook. The sentence you should remember.</p>
+
+  <aside class="notes">
+    Pause. Read it twice. This is the spine of the whole talk. Prompts are
+    what you type into the chat. Repositories are what the agent touches
+    *every minute* it's working. We underinvest in the second one. This is
+    our bet: the next 12 months of agent reliability come from better
+    repositories, not from better prompts.
+  </aside>
+</section>
+
+<!-- ================================================================
+     7. WHAT REPOSITORY-HARNESS IS
+     ================================================================ -->
+<section>
+  <h2>What repository-harness is</h2>
+
+  <p style="font-size: 0.9em;">A <span class="accent">repository-level operating harness</span> you install into any project.</p>
+
+  <p style="font-size: 0.85em;" class="dim">It gives coding agents the missing project context they need before they change code:</p>
+
+  <ul style="font-size: 0.78em;">
+    <li><strong>Where to start</strong> &mdash; <code>AGENTS.md</code> is the stable shim every session reads</li>
+    <li><strong>What the product contract says</strong> &mdash; <code>docs/product/</code> is the source of truth</li>
+    <li><strong>How risky the work is</strong> &mdash; tiny / normal / high-risk lane classification</li>
+    <li><strong>What proof is required</strong> &mdash; the test matrix and story verification commands</li>
+    <li><strong>Which decisions to inherit</strong> &mdash; durable <code>docs/decisions/</code> log</li>
+  </ul>
+
+  <p class="src pad-12">The app is what users touch. The harness is what agents touch. <span class="src">— README.md</span></p>
+
+  <aside class="notes">
+    Five things every agent needs to answer. Without a harness, it guesses.
+    With one, it knows. The README's tagline is the most-quoted line: "The
+    app is what users touch. The harness is what agents touch." That's the
+    mental model.
+  </aside>
+</section>
+
+<!-- ================================================================
+     8. INSTALL COMMAND
+     ================================================================ -->
+<section>
+  <h2>Install</h2>
+  <p class="dim small">One curl command drops the harness into any project.</p>
+
+  <h3 style="margin-top: 32px;">macOS / Linux</h3>
+  <pre><code>curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh" \
+  | bash -s -- --yes</code></pre>
+
+  <h3 style="margin-top: 24px;">Windows PowerShell</h3>
+  <pre><code>& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.ps1"))) -Yes</code></pre>
+
+  <p class="dim small pad-12">Installs <code>AGENTS.md</code>, <code>docs/</code>, <code>scripts/</code>, and the Rust <code>harness-cli</code> binary.</p>
+
+  <aside class="notes">
+    This is the "anyone can run it now" moment. The installer is non-destructive
+    by default — it stops if AGENTS.md already exists unless you pass --merge
+    or --override. For Claude Code users, pass --claude so the harness loads
+    via CLAUDE.md. We'll come back to this in the live demo.
+  </aside>
+</section>
+
+<!-- ================================================================
+     9. WHAT GETS INSTALLED
+     ================================================================ -->
+<section>
+  <h2>What gets installed</h2>
+
+  <pre><code>your-project/
+  AGENTS.md                        # stable shim every session reads
+  docs/
+    HARNESS.md                     # the operating model
+    FEATURE_INTAKE.md              # how to classify work
+    ARCHITECTURE.md                # boundaries & dependency rules
+    TEST_MATRIX.md                 # behavior → proof
+    HARNESS_MATURITY.md            # H0–H5 ladder
+    HARNESS_COMPONENTS.md          # 11 responsibilities
+    decisions/                     # durable decisions log
+    stories/                       # story packets
+    templates/                     # spec, story, decision, validation
+  scripts/
+    bin/harness-cli                # Rust CLI
+    schema/*.sql                   # durable-layer schema
+  .github/
+    ISSUE_TEMPLATE/                # failure-case, pattern-request</code></pre>
+
+  <p class="dim small pad-12">+ an optional <code>CLAUDE.md</code> shim if you use Claude Code.</p>
+
+  <aside class="notes">
+    This is the file map. The four things that matter most: AGENTS.md is
+    the agent's first read. docs/ is the operating policy. harness-cli is
+    the durable-state tool. The schema is version-controlled so the
+    database can be regenerated. No app code is scaffolded — that's
+    intentional, we don't want to lock a stack on someone.
+  </aside>
+</section>
+
+<!-- ================================================================
+     10. RISK LANE CLASSIFICATION
+     ================================================================ -->
+<section>
+  <h2>Risk lane classification</h2>
+  <p class="dim small">Every request enters the intake gate before any code changes.</p>
+
+  <div class="grid-3 pad-24">
+    <div class="box">
+      <h3 class="accent">tiny</h3>
+      <p class="dim small" style="margin:0;">low-risk docs, copy, narrow edits. Skips story-packet overhead.</p>
+    </div>
+    <div class="box accent">
+      <h3>normal</h3>
+      <p class="dim small" style="margin:0;">story-sized behavior, bounded blast radius. Story packet required.</p>
+    </div>
+    <div class="box warn">
+      <h3 class="warn">high-risk</h3>
+      <p class="dim small" style="margin:0;">touches auth, data, contracts, multiple platforms. Human gate + decision record.</p>
+    </div>
+  </div>
+
+  <p class="pad-12" style="font-size: 0.78em;">Hard gates: <span class="warn">auth</span>, <span class="warn">authorization</span>, <span class="warn">data loss</span>, <span class="warn">external systems</span>, <span class="warn">removing validation</span>.</p>
+
+  <p class="src">Defined in <code>docs/FEATURE_INTAKE.md</code></p>
+
+  <aside class="notes">
+    This is the "humans steer" part made concrete. The agent doesn't pick
+    lanes by vibes — there's a checklist of risk flags and hard gates. 0–1
+    flags = tiny/normal. 4+ flags = high-risk. Any hard gate = high-risk
+    unless a human explicitly narrows scope. This is one of our biggest
+    deviations from OpenAI's framing — they don't publish a comparable gate.
+  </aside>
+</section>
+
+<!-- ================================================================
+     11. THE TASK LOOP
+     ================================================================ -->
+<section>
+  <h2>The task loop</h2>
+
+  <pre style="font-size: 0.7em;"><code>human intent / prompt
+    |
+    v
+intake   ── &gt; classify input type, choose lane, record with harness-cli intake
+    |
+    v
+story    ── &gt; create or update story packet, link product docs
+    |
+    v
+trace    ── &gt; record what happened, score-trace, friction captured
+    |
+    v
+backlog  ── &gt; friction + interventions + audit → propose improvements
+    |
+    v
+growth   ── &gt; harness evolves from friction. the repo compounds.</code></pre>
+
+  <p class="src pad-12">Every loop run leaves a durable record in <code>harness.db</code>.</p>
+
+  <aside class="notes">
+    This is the orchestration. Every task goes through this loop. The
+    beautiful part: every loop run leaves a *durable record*. The agent's
+    work is auditable after the fact. The harness can be improved *from
+    evidence*, not from vibes. That's H3 active observability, and it's
+    the seed of H5 self-improvement.
+  </aside>
+</section>
+
+<!-- ================================================================
+     12. LIVE DEMO INTRO
+     ================================================================ -->
+<section class="title-slide">
+  <h2 style="font-size: 1.8em;">The proof</h2>
+  <p class="dim" style="font-size: 0.85em;">Same task. Two repos. Watch the agent behave differently.</p>
+  <p class="by accent">→ recorded terminal output on the next two slides</p>
+  <aside class="notes">
+    Transition slide. We're going to show two recorded runs of the same
+    task — add a small feature to a TypeScript project — once in a bare
+    repo, once in a harness-installed repo. Same agent, same model, same
+    prompt. The only thing that changes is the environment.
+  </aside>
+</section>
+
+<!-- ================================================================
+     13. BARE RUN
+     ================================================================ -->
+<section>
+  <h2>Bare repo <span class="danger" style="font-size:0.6em">— no harness</span></h2>
+
+  <pre style="font-size: 0.5em;"><code>$ task: "add a /api/folders endpoint that lists folders for the current user"
+
+[codex] reading project state... 12 files, no AGENTS.md, no docs/
+[codex] looking for an existing folders module... not found
+[codex] assuming a standard structure. creating src/routes/folders.ts
+[codex] adding a SELECT * FROM folders query. returning all rows.
+[codex] committing. PR opened: "add folders endpoint"
+        files changed: src/routes/folders.ts (new)
+        tests:        none
+        docs:         none
+        decision:     none
+        friction:     none recorded
+
+[review] discovered: query has no auth check, no pagination, no validation
+[review] discovered: schema mismatch with /api/bookmarks response shape
+[review] discovered: no test coverage
+[review] discovered: 3 follow-up issues filed manually</code></pre>
+
+  <p class="src">The agent wrote code first, asked questions never.</p>
+
+  <aside class="notes">
+    This is what an agent does in a typical repo. It makes assumptions about
+    auth, schema, response shape, test coverage. It opens a PR. A human
+    reviewer (or a stricter agent reviewer) finds the gaps. Each gap
+    becomes a follow-up. This is the 1.5-PR-per-day world. It's the
+    minimum-viable agent loop.
+  </aside>
+</section>
+
+<!-- ================================================================
+     14. HARNESS RUN
+     ================================================================ -->
+<section>
+  <h2>Harness repo <span class="accent" style="font-size:0.6em">— repository-harness installed</span></h2>
+
+  <pre style="font-size: 0.5em;"><code>$ task: "add a /api/folders endpoint that lists folders for the current user"
+
+[intake]    type=change_request lane=normal reason=touches API contract
+            docs affected: permissions, account-settings, audit-log
+            story: US-024-add-folders-endpoint
+            verify: cargo test --workspace
+
+[story]     US-024 created from docs/templates/story.md
+            linked: docs/product/permissions.md, docs/TEST_MATRIX.md
+            proof columns set: unit=1, integration=1, e2e=0, platform=0
+
+[codex]     reading AGENTS.md → reading FEATURE_INTAKE.md → reading affected docs
+[codex]     matches existing /api/bookmarks response envelope
+[codex]     reuses WorkspaceId + auth middleware from /api/bookmarks
+[codex]     adds pagination cursor per docs/decisions/0008-auth-boundary.md
+[codex]     writes unit + integration tests
+[codex]     opens PR referencing US-024
+
+[trace]     recorded: agent=codex, friction=none, score=2.8/3
+[verify]    story verify US-024 → cargo test --workspace → PASS</code></pre>
+
+  <p class="src">The agent <span class="accent">read the policy first</span>, then wrote code.</p>
+
+  <aside class="notes">
+    Same prompt, same agent. But now there's a policy. The agent is told:
+    classify the work, link the story, match the existing envelope, follow
+    the auth decision, prove it. Notice friction=0. Notice the trace score.
+    Notice the verify ran. This is the difference between "agent writes
+    code" and "agent works in a harness." Same model. Different outcome.
+  </aside>
+</section>
+
+<!-- ================================================================
+     15. WHAT CHANGED
+     ================================================================ -->
+<section>
+  <h2>What changed</h2>
+
+  <table style="font-size: 0.7em; width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="color: var(--ink-mute); border-bottom: 1px solid var(--line);">
+        <th style="text-align:left; padding: 8px 6px;">&nbsp;</th>
+        <th style="text-align:left; padding: 8px 6px;" class="danger">Bare</th>
+        <th style="text-align:left; padding: 8px 6px;" class="accent">Harness</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 6px;">Read policy first</td>     <td class="danger">no</td>  <td class="accent">yes</td></tr>
+      <tr><td style="padding: 6px;">Reused existing envelope</td><td class="danger">no</td>  <td class="accent">yes</td></tr>
+      <tr><td style="padding: 6px;">Auth boundary respected</td> <td class="danger">no</td>  <td class="accent">yes</td></tr>
+      <tr><td style="padding: 6px;">Tests written</td>          <td class="danger">no</td>  <td class="accent">yes</td></tr>
+      <tr><td style="padding: 6px;">Decision inherited</td>      <td class="danger">no</td>  <td class="accent">yes</td></tr>
+      <tr><td style="padding: 6px;">Verify command ran</td>      <td class="danger">no</td>  <td class="accent">yes</td></tr>
+      <tr><td style="padding: 6px;">Trace recorded</td>          <td class="danger">no</td>  <td class="accent">yes</td></tr>
+      <tr><td style="padding: 6px;">Follow-up issues</td>        <td>3 manual</td>           <td>0</td></tr>
+    </tbody>
+  </table>
+
+  <p class="quote pad-24" style="font-size: 0.85em;">"What capability is missing, and how do we make it both legible and enforceable for the agent?" <span class="src">— OpenAI</span></p>
+
+  <aside class="notes">
+    This is the diff. The agent's coding ability didn't change. The
+    *environment* did. Eight yes/no rows. The OpenAI quote at the bottom
+    is the framing: our work is not "make the model smarter," it's "make
+    the environment legible and enforceable for the agent."
+  </aside>
+</section>
+
+<!-- ================================================================
+     16. EXTERNALIZATION (the historical frame)
+     ================================================================ -->
+<section>
+  <h2>The historical frame</h2>
+  <p class="dim small">From an arXiv survey: <em>Externalization in LLM Agents</em> <span class="src">(arXiv 2604.08224)</span></p>
+
+  <pre style="text-align: center; font-size: 0.85em; padding: 18px;"><code><span class="mute">1960s–2010s</span>      <span class="accent2">weights</span>       →  capability lives inside the model
+<span class="mute">2018–2023</span>        <span class="accent2">context</span>      →  capability moves into the prompt + retrieval
+<span class="mute">2024–2026</span>        <span class="accent">harness</span>      →  capability moves into the environment around the model</code></pre>
+
+  <p class="pad-12" style="font-size: 0.78em;">Three forms of externalization: <strong>memory</strong> (state), <strong>skills</strong> (procedures), <strong>protocols</strong> (interaction), unified by the <strong>harness</strong>.</p>
+
+  <p class="src">Source: <a href="https://arxiv.org/abs/2604.08224">arxiv.org/abs/2604.08224</a></p>
+
+  <aside class="notes">
+    This is the academic frame for why harnesses matter. The arXiv 2604.08224
+    survey argues that agent progress comes less from changing model weights
+    and more from externalizing cognitive burden into the environment.
+    Memory externalizes state. Skills externalize procedures. Protocols
+    externalize interaction. The harness is the unification layer.
+    Repository-harness is the most ambitious form of this: the *whole
+    repository* is the externalization surface.
+  </aside>
+</section>
+
+<!-- ================================================================
+     17. H0–H5 MATURITY LADDER
+     ================================================================ -->
+<section>
+  <h2>The maturity ladder</h2>
+  <p class="dim small">Each level is a verifiable claim. No hand-waving at H3+.</p>
+
+  <div class="hladder" style="margin-top: 28px;">
+    <div class="h0">H0</div> <div class="label">Bare environment. No harness, model sees only a prompt.</div>                                <div class="status-ok">passed</div>
+    <div class="h1">H1</div> <div class="label">Scaffolding &amp; policy. <code>AGENTS.md</code>, intake, templates exist.</div>           <div class="status-ok">achieved</div>
+    <div class="h2">H2</div> <div class="label">Durable state &amp; observability. <code>harness.db</code>, trace spec, context rules.</div> <div class="status-ok">achieved</div>
+    <div class="h3">H3</div> <div class="label">Active observability &amp; evolution. <code>score-trace</code>, friction grouping, attribution.</div> <div class="status-warn">partial</div>
+    <div class="h4">H4</div> <div class="label">Mechanical verification. <code>story verify</code>, <code>verify-all</code>, pre-close gate.</div> <div class="status-ok">achieved</div>
+    <div class="h5">H5</div> <div class="label">Self-improving. <code>audit</code>, <code>propose</code> from friction + interventions.</div>       <div class="status-warn">partial</div>
+  </div>
+
+  <p class="src pad-24">Source: <a href="https://arxiv.org/abs/2605.13357">arXiv 2605.13357</a> (H0–H3 original) extended to H5 in our <code>docs/HARNESS_MATURITY.md</code></p>
+
+  <aside class="notes">
+    This is our hero ladder. The arXiv paper gave us H0–H3. We extended to
+    H5 because our 5 shipped phases need 5 levels. The rule: a level is
+    achieved only when its criteria can be inspected in repository files,
+    durable records, or benchmark output. H4 is the first level where we
+    claim achieved end-to-end. H5 is partial because we ship the commands
+    but the *outcomes* of the proposal loop aren't yet proven over repeated
+    benchmark runs. That's our next paper-worthy result.
+  </aside>
+</section>
+
+<!-- ================================================================
+     18. OUR COVERAGE
+     ================================================================ -->
+<section>
+  <h2>Our coverage</h2>
+  <p class="dim small">Mapped to the 11 component responsibilities from arXiv 2605.13357.</p>
+
+  <div class="grid-2 pad-24">
+    <div>
+      <h3 class="accent">Covered · 8/11</h3>
+      <ul style="font-size: 0.7em; line-height: 1.5;">
+        <li>Task specification</li>
+        <li>Context selection</li>
+        <li>Tool access</li>
+        <li>Project memory</li>
+        <li>Task state</li>
+        <li>Verification</li>
+        <li>Entropy auditing</li>
+        <li>Intervention recording</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="warn">Partial · 3/11</h3>
+      <ul style="font-size: 0.7em; line-height: 1.5;">
+        <li>Observability <span class="dim">— no dashboard yet</span></li>
+        <li>Failure attribution <span class="dim">— no automated component mapping</span></li>
+        <li>Permissions <span class="dim">— policy advisory, not enforced</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="src pad-12">Full map: <code>docs/HARNESS_COMPONENTS.md</code></p>
+
+  <aside class="notes">
+    11 responsibilities from the arXiv paper, mapped to our files. 8 are
+    fully covered — that means there's an explicit file, command, or record
+    for them. 3 are partial. The partials are honest gaps: observability
+    doesn't have a dashboard (just CLI queries), failure attribution is
+    manual, permissions are advisory. These map directly to our roadmap
+    items.
+  </aside>
+</section>
+
+<!-- ================================================================
+     19. THE 9 ARXIV PAPERS (curated)
+     ================================================================ -->
+<section>
+  <h2>5 papers to read</h2>
+  <p class="dim small">Filtered from ~15 candidates. 3 are core, 2 are roadmap.</p>
+
+  <div style="font-size: 0.68em; line-height: 1.45;">
+    <p><strong class="accent">1. arXiv 2605.13357</strong> — AI Harness Engineering: A Runtime Substrate. <span class="dim">11 responsibilities, H0–H3 ladder. <em>Closest match to our work.</em></span></p>
+    <p><strong class="accent">2. arXiv 2604.08224</strong> — Externalization in LLM Agents. <span class="dim">Memory/skills/protocols/harness as the unification layer.</span></p>
+    <p><strong class="accent">3. arXiv 2605.18747</strong> — Code as Agent Harness. <span class="dim">Code is the operational substrate. "The repo IS the harness."</span></p>
+    <p style="margin-top: 18px;" class="dim">— ROADMAP —</p>
+    <p><strong class="warn">4. arXiv 2604.25850</strong> — Agentic Harness Engineering. <span class="dim">Harnesses that evolve themselves. Our H5 target.</span></p>
+    <p><strong class="warn">5. arXiv 2606.10106</strong> — What makes a harness a harness. <span class="dim">The constitutive definition. Boundary work for the field.</span></p>
+  </div>
+
+  <p class="src pad-12">All 9 curated papers + abstracts: <a href="https://github.com/hoangnb24/repository-harness">github.com/hoangnb24/repository-harness</a> (see <code>presentation-research.md</code>)</p>
+
+  <aside class="notes">
+    Five papers, ranked by relevance. The hero is 2605.13357 — that's the
+    paper our H0–H5 ladder is based on. The second two are the historical
+    and substrate frames. The last two are roadmap items: AHE is what H5
+    becomes when harnesses write themselves, and 2606.10106 is the
+    definitional paper that settles "is this a harness or not."
+  </aside>
+</section>
+
+<!-- ================================================================
+     20. THE FIELD (one slide summary)
+     ================================================================ -->
+<section>
+  <h2>Where the field is heading</h2>
+
+  <pre style="font-size: 0.78em;"><code>2025  agent frameworks          (LangGraph, CrewAI, Autogen)
+2025  coding agents             (Claude Code, Codex CLI, Aider, Cursor)
+2026  harness engineering        (OpenAI, LangChain, the arXiv wave)
+      &uarr;
+      you are here
+2026+ self-evolving harnesses   (AHE, Meta-Harness, recursive harnesses)
+2027? harness-as-a-product      (a deployable unit, not a wrapper)</code></pre>
+
+  <p class="src pad-12">Source: <a href="https://arxiv.org/abs/2604.25850">AHE</a> · <a href="https://arxiv.org/abs/2605.12129">Meta-Harness</a> · <a href="https://arxiv.org/abs/2605.24220">Recursive Agent Harnesses</a></p>
+
+  <aside class="notes">
+    Quick timeline. Where we are: 2026, harness engineering. Where it's
+    going: harnesses that evolve themselves (AHE), recursive harnesses
+    that spawn sub-harnesses, harnesses-as-a-product. Our Phase 5 work
+    is a step in that direction — we ship the propose/audit loop, but
+    we don't yet close the loop with repeated benchmark outcomes.
+  </aside>
+</section>
+
+<!-- ================================================================
+     21. BENCHMARK PROGRESSION
+     ================================================================ -->
+<section>
+  <h2>The benchmark progression</h2>
+  <p class="dim small">Same agent (codex), same 6 tasks T1–T6, run after each phase.</p>
+
+  <div class="barchart" style="margin-top: 18px;">
+<pre style="background: transparent; border: none; padding: 0; font-size: 0.95em;"><code><span class="head">                Baseline   Phase2   Phase3   Phase4   Phase5</span>
+<span class="lbl">Compliance </span>   <span class="bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> 80.6  →  <span class="bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> 96.7  →  <span class="bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> 100  →  100  →  100
+<span class="lbl">Trace Q.   </span>   1.8         →        <span class="bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> 2.6  →  2.5        →  2.1        →  2.1
+<span class="lbl">Lane acc.  </span>   5/6  →  <span class="bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> 6/6  →  6/6  →  6/6  →  6/6
+<span class="lbl">Functional </span>   100%  →  100%  →  100%  →  100%  →  100%</code></pre>
+  </div>
+
+  <p class="quote pad-24" style="font-size: 0.78em;">Harness compliance went from <span class="danger">80.6%</span> to <span class="accent">100%</span> across five phases. <span class="src">Same agent. Same model. Same prompts. Different environment.</span></p>
+
+  <p class="src">Source: <code>harness-benchmark/benchmark/runs/</code> (all reports)</p>
+
+  <aside class="notes">
+    This is the proof. The benchmark runs the same 6 tasks against each
+    phase of the harness. Same agent. Same model. Same prompts. The only
+    variable is the harness. Harness compliance — did the agent follow
+    the policy? — went from 80.6% to 100%. Trace quality went from 1.8 to
+    2.6. Lane accuracy went from 5/6 to 6/6 — meaning the agent always
+    picks the correct risk classification. Functional stayed at 100%
+    because we never changed the agent's coding ability, only its
+    environment. This is the answer to "is this all philosophy?"
+  </aside>
+</section>
+
+<!-- ================================================================
+     22. PHASE 5: PROPOSE / AUDIT / SCORE-CONTEXT
+     ================================================================ -->
+<section>
+  <h2>Phase 5: the evolution loop</h2>
+  <p class="dim small">The first step toward H5 self-improving harnesses.</p>
+
+  <div class="grid-3 pad-24" style="font-size: 0.72em;">
+    <div class="box">
+      <h3 class="accent">score-context</h3>
+      <p class="dim small" style="margin: 6px 0 0;">Measures which docs the agent actually read for a trace. <em>"Did the agent read the right policy before acting?"</em></p>
+    </div>
+    <div class="box warn">
+      <h3 class="warn">audit</h3>
+      <p class="dim small" style="margin: 6px 0 0;">Detects durable-state drift. Computes an entropy score across the harness.db. <em>"Is the harness in a healthy state?"</em></p>
+    </div>
+    <div class="box accent">
+      <h3>propose</h3>
+      <p class="dim small" style="margin: 6px 0 0;">Generates structured improvement proposals from friction + interventions + audit results. <em>"What should we change about the harness?"</em></p>
+    </div>
+  </div>
+
+  <pre style="margin-top: 20px; font-size: 0.55em;"><code>$ harness-cli audit           # entropy score, drift categories
+$ harness-cli propose         # reviewable improvement proposals
+$ harness-cli propose --commit # creates backlog items, never edits policy</code></pre>
+
+  <p class="src pad-12">Spec: <code>docs/IMPROVEMENT_PROTOCOL.md</code></p>
+
+  <aside class="notes">
+    Three new commands, all shipped in Phase 5. The key insight: propose
+    does NOT edit the policy. It creates reviewable backlog items. The
+    high-risk changes (architecture, source-of-truth, validation rules)
+    pause for human confirmation. This is the seed of H5. The next
+    research question is: do repeated runs of the proposal loop actually
+    *improve* the harness? That's the closed-loop experiment.
+  </aside>
+</section>
+
+<!-- ================================================================
+     23. ROADMAP
+     ================================================================ -->
+<section>
+  <h2>Roadmap</h2>
+  <p class="dim small">What comes after H4 achieved.</p>
+
+  <div style="font-size: 0.78em; line-height: 1.6;">
+    <p><span class="warn">▸</span> <strong>H3 closure</strong> &mdash; component-level regression attribution in the benchmark. <span class="dim">Which of the 11 responsibilities moved?</span></p>
+    <p><span class="warn">▸</span> <strong>H5 closure</strong> &mdash; repeated benchmark outcomes proving the proposal loop. <span class="dim">Closed-loop experiment.</span></p>
+    <p><span class="warn">▸</span> <strong>Permission enforcement</strong> &mdash; turn advisory policy into enforced command allowlists. <span class="dim">The biggest gap.</span></p>
+    <p><span class="warn">▸</span> <strong>Tool usage analytics</strong> &mdash; measure which docs the agent actually reads. <span class="dim">Feed back into score-context.</span></p>
+    <p><span class="accent">▸</span> <strong>Long horizon</strong> &mdash; harnesses that write themselves. <span class="dim">The arXiv 2604.25850 frontier.</span></p>
+  </div>
+
+  <p class="src pad-12">Current state: <code>docs/HARNESS_MATURITY.md</code> &middot; <a href="https://github.com/hoangnb24/repository-harness">github.com/hoangnb24/repository-harness</a></p>
+
+  <aside class="notes">
+    Honest roadmap. The first two close the current maturity ladder. The
+    next two are the next level of polish. The last is the long-horizon
+    research bet. We are not there yet. We are not claiming it. We are
+    building toward it. That's the difference between hype and research.
+  </aside>
+</section>
+
+<!-- ================================================================
+     24. TRY IT (bilingual)
+     ================================================================ -->
+<section>
+  <h2>Try it tonight</h2>
+
+  <div class="grid-2 pad-12">
+    <div>
+      <h3 class="accent">English</h3>
+      <pre style="font-size: 0.55em;"><code>curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh" \
+  | bash -s -- --yes
+
+# then in your project:
+harness-cli intake --type change_request --summary "..." --lane normal
+harness-cli query matrix
+harness-cli story add --id US-001 --title "..." --lane normal
+harness-cli trace --summary "..." --outcome completed</code></pre>
+    </div>
+    <div>
+      <h3 class="accent">Tiếng Việt</h3>
+      <pre style="font-size: 0.55em;"><code># Cài vào project bất kỳ trong 1 lệnh:
+curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh" \
+  | bash -s -- --yes
+
+# Sau đó trong project:
+harness-cli intake  # phân loại yêu cầu
+harness-cli story   # tạo story packet
+harness-cli trace   # ghi lại quá trình
+harness-cli audit   # kiểm tra trạng thái harness</code></pre>
+    </div>
+  </div>
+
+  <p class="dim small pad-12">Star the repo · read the blog · try the installer.</p>
+  <p class="by accent" style="margin-top: 18px;">codeharness.kuckit.dev</p>
+
+  <aside class="notes">
+    Bilingual moment. The English version is for the international students.
+    The Vietnamese version is for the home audience. Both are real install
+    commands. The four harness-cli commands after install are the most
+    useful primitives to know. After this slide, anyone in the audience can
+    try it tonight.
+  </aside>
+</section>
+
+<!-- ================================================================
+     25. Q&A
+     ================================================================ -->
+<section class="title-slide" data-state="qa">
+  <h1 style="font-size: 1.8em;">Q &amp; A</h1>
+  <p class="sub" style="margin-top: 24px;">github.com/hoangnb24/repository-harness</p>
+  <p class="sub">codeharness.kuckit.dev &middot; @hoangmrb</p>
+  <p class="by" style="margin-top: 40px;">"The app is what users touch. The harness is what agents touch."</p>
+  <p class="by accent" style="margin-top: 18px;">— Thank you. —</p>
+
+  <aside class="notes">
+    Closing. Thank the audience. Invite questions. If the room is quiet,
+    prompt with: "What's the first thing you'd want to make legible in your
+    own repo?" or "Which of the 11 responsibilities do you think is the
+    most underrated?" Hold the stage for the last 5 minutes — the best
+    questions always come at the end.
+  </aside>
+</section>
+
+</div><!-- /.slides -->
+</div><!-- /.reveal -->
+
+<script>
+  // localStorage persistence + standard reveal config
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    controls: true,
+    progress: true,
+    history: true,
+    center: false,
+    transition: 'none',
+    pdfSeparateFragments: false,
+    // restore the last slide on refresh
+    storage: {
+      // built-in: reveal.js auto-persists index.html#N
+    }
+  });
+
+  // keyboard: S opens speaker notes view
+  Reveal.addKeyBinding({ keyCode: 83, key: 'S' }, function() {
+    var notes = document.querySelectorAll('aside.notes');
+    notes.forEach(function(n) { n.style.display = (n.style.display === 'block') ? 'none' : 'block'; });
+  });
+</script>
+</body>
+</html>

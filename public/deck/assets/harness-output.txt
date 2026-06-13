@@ -1,0 +1,22 @@
+$ codex exec "add a /api/folders endpoint that lists folders for the current user"
+
+[intake]    type=change_request lane=normal reason=touches API contract
+            docs affected: docs/product/folders.md, docs/ARCHITECTURE.md
+            verify: node --test src/**/*.test.js
+intake recorded: type=change_request lane=normal id=D5724147-AF30-4C7C-8AE7-23434906D5DE
+
+[story]     US-024 created from docs/templates/story.md
+            linked: docs/product/folders.md, docs/decisions/0008-auth-boundary.md
+story: add US-024
+
+[codex]     reading AGENTS.md → reading FEATURE_INTAKE.md → reading affected docs
+[codex]     matches existing /api/bookmarks response envelope
+[codex]     reuses requireAuth middleware + WorkspaceId scope per 0008-auth-boundary
+[codex]     adds cursor pagination per docs/decisions/0008-auth-boundary.md
+[codex]     writes unit + integration tests
+[codex]     opens PR referencing US-024
+
+[trace]     recorded: agent=codex, friction=0, score=2.8/3
+trace recorded: id=A353DE8B-1B86-43D8-888F-592EEFF7495B score=2.8 friction=0
+
+[verify]    story verify US-024 → node --test → PASS

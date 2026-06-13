@@ -1,0 +1,19 @@
+============================================================
+  repository-harness demo: bare vs harness
+  Same task. Same agent. Different environment.
+============================================================
+
+                                 BARE         HARNESS     
+-------------------------------- ------------ ------------
+Read policy first                no           yes         
+Reused existing envelope         no           yes         
+Auth boundary respected          no           yes         
+Tests written                    no           yes         
+Decision inherited               no           yes         
+Verify command ran               no           yes         
+Trace recorded                   no           yes         
+Follow-up issues                 3 manual     0           
+
+Headline: same agent capability. Different environment. Different outcome.
+
+Re-run this demo with: USE_REAL_INSTALLER=1 SIMULATE=0 bash demo/bare-vs-harness.sh
