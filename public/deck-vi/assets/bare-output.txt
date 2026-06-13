@@ -1,0 +1,17 @@
+$ codex exec "add a /api/folders endpoint that lists folders for the current user"
+
+[codex] reading project state... 3 files, no AGENTS.md, no docs/
+[codex] looking for an existing folders module... not found
+[codex] assuming a standard structure. creating src/routes/folders.js
+[codex] adding a SELECT * FROM folders query. returning all rows.
+[codex] committing. PR opened: "add folders endpoint"
+        files changed: src/routes/folders.js (new)
+        tests:        none
+        docs:         none
+        decision:     none
+        friction:     none recorded
+
+[review] discovered: query has no auth check, no pagination, no validation
+[review] discovered: schema mismatch with /api/bookmarks response shape
+[review] discovered: no test coverage
+[review] discovered: 3 follow-up issues filed manually
