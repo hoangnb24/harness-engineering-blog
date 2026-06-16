@@ -165,7 +165,41 @@ Iterate from there.
 
 ---
 
-*See also: [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the broader context for why AGENTS.md alone is not enough, but is the right starting point.*
+- [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the broader context for why AGENTS.md alone is not enough, but is the right starting point.
+
+---
+
+## FAQ
+
+### How long should an AGENTS.md file be?
+
+A single screen of text, roughly 60–120 lines. Anything longer and the agent starts skimming or skipping sections. Durable, repo-wide rules go at the top; deeper detail lives in linked docs.
+
+### Where should AGENTS.md live in the repository?
+
+At the repository root, as `./AGENTS.md`. Some tools also pick up `./.github/AGENTS.md` or `./docs/AGENTS.md`, but the root location is the universal default and the only one every agent reads.
+
+### What is the difference between AGENTS.md and README.md?
+
+README.md is for humans joining the project: how to install, build, contribute. AGENTS.md is for coding agents entering the project: operating constraints, validation rules, and safety boundaries that must hold on every change. The two overlap, but the audience and intent are different.
+
+### What should NOT be in AGENTS.md?
+
+The README. Task-specific context (current sprint, ticket numbers, why a library was picked). Obvious instructions that a human would never need. Long architecture essays. Put those in linked documents, story packets, and decision records instead.
+
+### Does Claude Code actually read AGENTS.md?
+
+Yes. Claude Code reads `AGENTS.md` from the repository root at the start of every session. The same file is also picked up by Codex-based tools, Aider (with `--read`), and most modern coding agents that follow the open convention.
+
+### How do I know my AGENTS.md is working?
+
+After a few agent sessions, ask: did the agent run the right validation command before handing back work? Did it ask before changing a risky area? Did it report an error in the right place? If yes, the file is doing its job. If agents are making guessy changes or skipping checks, the file needs another revision.
+
+### How do I keep AGENTS.md from going stale?
+
+Treat it like code: review changes in pull requests, update it when an agent makes the same mistake twice, link from it to decision records so the why lives in version control, and delete sections that stop being useful. The file should always reflect the current operating contract, not the original author's good intentions.
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How long should an AGENTS.md file be?","acceptedAnswer":{"@type":"Answer","text":"A single screen of text, roughly 60 to 120 lines. Anything longer and the agent starts skimming or skipping sections. Durable, repo-wide rules go at the top; deeper detail lives in linked docs."}},{"@type":"Question","name":"Where should AGENTS.md live in the repository?","acceptedAnswer":{"@type":"Answer","text":"At the repository root, as ./AGENTS.md. Some tools also pick up ./.github/AGENTS.md or ./docs/AGENTS.md, but the root location is the universal default and the only one every agent reads."}},{"@type":"Question","name":"What is the difference between AGENTS.md and README.md?","acceptedAnswer":{"@type":"Answer","text":"README.md is for humans joining the project: how to install, build, contribute. AGENTS.md is for coding agents entering the project: operating constraints, validation rules, and safety boundaries that must hold on every change. The two overlap, but the audience and intent are different."}},{"@type":"Question","name":"What should NOT be in AGENTS.md?","acceptedAnswer":{"@type":"Answer","text":"The README. Task-specific context (current sprint, ticket numbers, why a library was picked). Obvious instructions that a human would never need. Long architecture essays. Put those in linked documents, story packets, and decision records instead."}},{"@type":"Question","name":"Does Claude Code actually read AGENTS.md?","acceptedAnswer":{"@type":"Answer","text":"Yes. Claude Code reads AGENTS.md from the repository root at the start of every session. The same file is also picked up by Codex-based tools, Aider (with --read), and most modern coding agents that follow the open convention."}},{"@type":"Question","name":"How do I know my AGENTS.md is working?","acceptedAnswer":{"@type":"Answer","text":"After a few agent sessions, ask: did the agent run the right validation command before handing back work? Did it ask before changing a risky area? Did it report an error in the right place? If yes, the file is doing its job. If agents are making guessy changes or skipping checks, the file needs another revision."}},{"@type":"Question","name":"How do I keep AGENTS.md from going stale?","acceptedAnswer":{"@type":"Answer","text":"Treat it like code: review changes in pull requests, update it when an agent makes the same mistake twice, link from it to decision records so the why lives in version control, and delete sections that stop being useful. The file should always reflect the current operating contract, not the original author's good intentions."}}]}</script>
 
 ---
 

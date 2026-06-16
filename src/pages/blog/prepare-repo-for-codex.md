@@ -208,3 +208,37 @@ The core principle is the same: make the repository legible so agents do not hav
 - [How to Prepare Your Repository for Claude Code](/blog/prepare-repo-for-claude-code/) — the parallel guide for Claude Code users
 - [AGENTS.md vs Cursor Rules](/blog/agents-md-vs-cursor-rules/) — choosing the right context file approach
 - [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
+
+---
+
+## FAQ
+
+### Does OpenAI Codex read AGENTS.md?
+
+Codex-based tools (GitHub Copilot, the Copilot API, the Codex CLI) read the repository context for the current task, and many follow the AGENTS.md convention. Unlike Claude Code, there is no single fixed startup sequence — the contract is whatever the tool that wraps Codex decides to honor. Adding `AGENTS.md` at the root is the safest bet for broad coverage.
+
+### What is the most important file to add for Codex reliability?
+
+A clear `README.md` plus `AGENTS.md` at the root. The README explains how to install, build, and run, which Codex needs to know to make correct changes. `AGENTS.md` adds operating constraints, validation rules, and safety boundaries. Together they form the minimum context that gets Codex out of "plausible but wrong" territory.
+
+### How is Codex different from Claude Code for repository setup?
+
+Claude Code has a fixed startup sequence that always reads `AGENTS.md` and a known set of supporting files. Codex is the model — the repository setup that matters depends on the tool wrapping it (Copilot, the API, a custom CLI). The repository itself should be opinionated and tool-agnostic. Durable rules go in `AGENTS.md`; tool-specific commands live in the tool's own config.
+
+### Does Codex run validation commands automatically?
+
+Only if the surrounding tool runs them. Codex itself generates code; whether the code is tested depends on the wrapper. To get reliable output, encode the exact validation command(s) in `AGENTS.md` and reference them in the task prompt or story packet. Without that, validation is up to chance.
+
+### How do I keep Codex from making risky changes?
+
+Add a "Do not do without asking first" section to `AGENTS.md` listing the risky areas: migrations, authentication, billing, secrets, destructive operations. Codex reads this as part of the task context and uses it to scope what it touches. For high-stakes changes, use a story packet so the model proposes a plan before editing code.
+
+### Should I use a different AGENTS.md for Codex and Claude Code?
+
+No. One `AGENTS.md` at the root works for both. Tool-specific commands go in tool-specific config files (`.claude/commands.md` for Claude Code, Codex's own config for Codex). The shared rules — what the project does, what proves a change is correct, what not to touch — should live in exactly one place so the two tools never disagree on the operating contract.
+
+### Can Codex work on a greenfield project with no AGENTS.md?
+
+Yes, and on small greenfield projects the absence of `AGENTS.md` hurts less because the model can read the entire codebase quickly. The cost shows up as the project grows: more files, more conventions, more ways to break things. Add `AGENTS.md` early — it is much easier to write when there are few enough decisions to capture.
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does OpenAI Codex read AGENTS.md?","acceptedAnswer":{"@type":"Answer","text":"Codex-based tools (GitHub Copilot, the Copilot API, the Codex CLI) read the repository context for the current task, and many follow the AGENTS.md convention. Unlike Claude Code, there is no single fixed startup sequence — the contract is whatever the tool that wraps Codex decides to honor. Adding AGENTS.md at the root is the safest bet for broad coverage."}},{"@type":"Question","name":"What is the most important file to add for Codex reliability?","acceptedAnswer":{"@type":"Answer","text":"A clear README.md plus AGENTS.md at the root. The README explains how to install, build, and run, which Codex needs to know to make correct changes. AGENTS.md adds operating constraints, validation rules, and safety boundaries. Together they form the minimum context that gets Codex out of plausible but wrong territory."}},{"@type":"Question","name":"How is Codex different from Claude Code for repository setup?","acceptedAnswer":{"@type":"Answer","text":"Claude Code has a fixed startup sequence that always reads AGENTS.md and a known set of supporting files. Codex is the model — the repository setup that matters depends on the tool wrapping it (Copilot, the API, a custom CLI). The repository itself should be opinionated and tool-agnostic. Durable rules go in AGENTS.md; tool-specific commands live in the tool's own config."}},{"@type":"Question","name":"Does Codex run validation commands automatically?","acceptedAnswer":{"@type":"Answer","text":"Only if the surrounding tool runs them. Codex itself generates code; whether the code is tested depends on the wrapper. To get reliable output, encode the exact validation command(s) in AGENTS.md and reference them in the task prompt or story packet. Without that, validation is up to chance."}},{"@type":"Question","name":"How do I keep Codex from making risky changes?","acceptedAnswer":{"@type":"Answer","text":"Add a Do not do without asking first section to AGENTS.md listing the risky areas: migrations, authentication, billing, secrets, destructive operations. Codex reads this as part of the task context and uses it to scope what it touches. For high-stakes changes, use a story packet so the model proposes a plan before editing code."}},{"@type":"Question","name":"Should I use a different AGENTS.md for Codex and Claude Code?","acceptedAnswer":{"@type":"Answer","text":"No. One AGENTS.md at the root works for both. Tool-specific commands go in tool-specific config files (.claude/commands.md for Claude Code, Codex's own config for Codex). The shared rules — what the project does, what proves a change is correct, what not to touch — should live in exactly one place so the two tools never disagree on the operating contract."}},{"@type":"Question","name":"Can Codex work on a greenfield project with no AGENTS.md?","acceptedAnswer":{"@type":"Answer","text":"Yes, and on small greenfield projects the absence of AGENTS.md hurts less because the model can read the entire codebase quickly. The cost shows up as the project grows: more files, more conventions, more ways to break things. Add AGENTS.md early — it is much easier to write when there are few enough decisions to capture."}}]}</script>

@@ -221,3 +221,37 @@ That is the minimum viable setup. Run a session and watch where Claude Code need
 - [`repository-harness` on GitHub](https://github.com/hoangnb24/repository-harness) — the open-source implementation
 - [What Is an Agent-Ready Repository?](/agent-ready-repository/) — the broader checklist
 - [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/) — the framework behind this
+
+---
+
+## FAQ
+
+### Does Claude Code read AGENTS.md automatically?
+
+Yes. Claude Code reads `AGENTS.md` from the repository root at the start of every session. It also reads `.claude/commands.md` for Claude Code-specific commands, and picks up standard project files like `package.json`, `tsconfig.json`, and the README. The root `AGENTS.md` is the highest-leverage single file for setting operating context.
+
+### Where should I put Claude Code-specific instructions?
+
+Keep the universal rules in the root `AGENTS.md` so every agent benefits. Put Claude Code-specific commands and shortcuts in `.claude/commands.md`. If a rule is only relevant to Claude Code (for example, a model-tier preference), that is the right file. If a rule applies to any coding agent, it belongs in `AGENTS.md`.
+
+### How is Claude Code different from raw API calls to Claude?
+
+Claude Code is a loop: it reads, plans, runs commands, inspects output, and iterates until the task is done. Raw API calls are single-shot completions. Claude Code's loop makes repository context more important, because the model has to make decisions about which files to read, which tests to run, and which changes to attempt without you watching.
+
+### What is the most important file to add to a repository for Claude Code?
+
+`AGENTS.md` at the root. It tells Claude Code which commands prove a change is correct, which files or directories it must not touch without asking, and which decisions are already made. After `AGENTS.md`, the next-highest-leverage additions are a short architecture map, a validation matrix, and decision records for non-obvious choices.
+
+### Does Claude Code run my tests automatically?
+
+Only if you tell it to. `AGENTS.md` should list the exact validation command(s) for each change type. Without that, Claude Code will sometimes run the default `npm test`, sometimes skip validation entirely, and sometimes run commands that are not what you want. A precise validation matrix in `AGENTS.md` is the single biggest quality lift for Claude Code sessions.
+
+### How do I keep Claude Code from making risky changes?
+
+Add a short "Do not do without asking first" section to `AGENTS.md` listing the risky areas: migrations, authentication, billing, secrets, anything destructive. Claude Code reads this at startup and uses it as a guardrail. For higher-stakes changes, also use story packets so the agent proposes a plan before touching code.
+
+### Can Claude Code work on a repository with no documentation at all?
+
+Technically yes, but the quality drops fast. Without `AGENTS.md`, a README that explains how to build, or any architecture notes, Claude Code will infer everything from the code and make plausible-but-wrong assumptions about conventions, validation, and safety. A bare repo gets bare output. A few hours of repo context saves dozens of bad agent sessions.
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does Claude Code read AGENTS.md automatically?","acceptedAnswer":{"@type":"Answer","text":"Yes. Claude Code reads AGENTS.md from the repository root at the start of every session. It also reads .claude/commands.md for Claude Code-specific commands, and picks up standard project files like package.json, tsconfig.json, and the README. The root AGENTS.md is the highest-leverage single file for setting operating context."}},{"@type":"Question","name":"Where should I put Claude Code-specific instructions?","acceptedAnswer":{"@type":"Answer","text":"Keep the universal rules in the root AGENTS.md so every agent benefits. Put Claude Code-specific commands and shortcuts in .claude/commands.md. If a rule is only relevant to Claude Code (for example, a model-tier preference), that is the right file. If a rule applies to any coding agent, it belongs in AGENTS.md."}},{"@type":"Question","name":"How is Claude Code different from raw API calls to Claude?","acceptedAnswer":{"@type":"Answer","text":"Claude Code is a loop: it reads, plans, runs commands, inspects output, and iterates until the task is done. Raw API calls are single-shot completions. Claude Code's loop makes repository context more important, because the model has to make decisions about which files to read, which tests to run, and which changes to attempt without you watching."}},{"@type":"Question","name":"What is the most important file to add to a repository for Claude Code?","acceptedAnswer":{"@type":"Answer","text":"AGENTS.md at the root. It tells Claude Code which commands prove a change is correct, which files or directories it must not touch without asking, and which decisions are already made. After AGENTS.md, the next-highest-leverage additions are a short architecture map, a validation matrix, and decision records for non-obvious choices."}},{"@type":"Question","name":"Does Claude Code run my tests automatically?","acceptedAnswer":{"@type":"Answer","text":"Only if you tell it to. AGENTS.md should list the exact validation command(s) for each change type. Without that, Claude Code will sometimes run the default npm test, sometimes skip validation entirely, and sometimes run commands that are not what you want. A precise validation matrix in AGENTS.md is the single biggest quality lift for Claude Code sessions."}},{"@type":"Question","name":"How do I keep Claude Code from making risky changes?","acceptedAnswer":{"@type":"Answer","text":"Add a short Do not do without asking first section to AGENTS.md listing the risky areas: migrations, authentication, billing, secrets, anything destructive. Claude Code reads this at startup and uses it as a guardrail. For higher-stakes changes, also use story packets so the agent proposes a plan before touching code."}},{"@type":"Question","name":"Can Claude Code work on a repository with no documentation at all?","acceptedAnswer":{"@type":"Answer","text":"Technically yes, but the quality drops fast. Without AGENTS.md, a README that explains how to build, or any architecture notes, Claude Code will infer everything from the code and make plausible-but-wrong assumptions about conventions, validation, and safety. A bare repo gets bare output. A few hours of repo context saves dozens of bad agent sessions."}}]}</script>
