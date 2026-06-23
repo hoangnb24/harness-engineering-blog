@@ -77,6 +77,14 @@ const blogPosts = [
 <BaseLayout title="Blog | Harness Engineering Blog" description="Articles about AGENTS.md, context engineering, and agent-ready repositories.">
   <div slot="site-title">CodeHarness</div>
   <div class="main">
+    <section class="hero-cta">
+      <h1>The blog.</h1>
+      <p>Practical notes from building with AI coding agents — AGENTS.md templates, context-engineering patterns, harness-engineering workflows, and the failure modes that taught us each lesson.</p>
+      <p class="hero-cta-buttons">
+        <a class="cta-primary" href="https://github.com/hoangnb24/repository-harness">★ Star on GitHub</a>
+        <a class="cta-secondary" href="/">All posts</a>
+      </p>
+    </section>
     {blogPosts.map((post) => (
       <article class="post">
         <div class="post-date">{post.date}</div>

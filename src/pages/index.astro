@@ -139,6 +139,14 @@ const posts = [
 <BaseLayout title="CodeHarness" description="Stories, tests, and practical notes from building with AI coding agents.">
   <div slot="site-title">CodeHarness</div>
   <div class="main">
+    <section class="hero-cta">
+      <h1>Make any repository agent-ready.</h1>
+      <p>Open-source templates, conventions, and validation rules that turn coding-agent sessions into reliable, reviewable changes. Works with Claude Code, Codex, Cursor, and other AI coding agents.</p>
+      <p class="hero-cta-buttons">
+        <a class="cta-primary" href="https://github.com/hoangnb24/repository-harness">★ Star on GitHub</a>
+        <a class="cta-secondary" href="/agent-ready-repository/">What is an agent-ready repo?</a>
+      </p>
+    </section>
     {posts.map((post) => (
       <article class="post">
         <div class="post-date">{post.date}</div>
