@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MCP & Multi-Agent Protocol Orchestration</title>
+  <style>
+    /* ===========================================================
+       Deck framework — DO NOT EDIT the rules in this <style> block.
+       Edit only inside the second <style> block below (per-deck
+       styles) and inside <section class="slide"> bodies.
+
+       Contract this framework provides:
+         - 1920×1080 fixed canvas, scaled to fit the viewport
+         - Only .slide.active is visible at a time
+         - Prev/next + counter rendered outside the scaled stage
+         - Keyboard (← → space PgUp PgDn Home End), click, and stored
+           position survive iframe focus quirks
+         - "Save as PDF" produces a multi-page vertical PDF, one slide
+           per page, by toggling every slide visible under @media print
+       =========================================================== */
+    :root {
+      /* SLOT: theme tokens — the only top-level CSS the agent edits.
+         Add or override --bg / --fg / --accent / etc. here. */
+      --bg: #0d1117;
+      --fg: #f0f6fc;
+      --muted: #8b949e;
+      --accent: #3fb950;
+      --surface: #161b22;
+      --shell: #010409;
+      --surface-2: #0d1117;
+      --line: #30363d;
+      --blue: #58a6ff;
+      --purple: #bc8cff;
+      --yellow: #d29922;
+      --danger: #ff7b72;
+      --text: #c9d1d9;
+      --text-dim: #7d8590;
+      --font-display: ui-monospace, "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: ui-monospace, "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--shell);
+      color: var(--fg);
+      font: 18px/1.5 -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .deck-shell {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+    .deck-stage {
+      width: 1920px;
+      height: 1080px;
+      background: var(--bg);
+      position: relative;
+      transform-origin: top left;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    /* Visibility toggle hardened with :not(.active) + !important so cascade
+       order can't break it. The previous `.slide { display:none }` rule
+       lost the cascade whenever a per-slide variant class (e.g.
+       `.s-cold { display:grid }`) was declared after it on the same
+       element — every slide silently became visible at once. The
+       `!important` is a belt-and-suspenders against agent code that adds
+       `!important` on variant classes too. */
+    .slide:not(.active) { display: none !important; }
+    /* The active default uses :where() so it has zero specificity. Per-slide
+       variant classes like `.s-cold { display:grid }` or
+       `.s-magazine { display:block }` can override the default flex layout
+       just by declaring `display` — no need for the variant to be more
+       specific. The hide rule above still wins for inactive slides. */
+    :where(.slide.active) { display: flex; flex-direction: column; }
+
+    /* Chrome — counter + prev/next live outside the scaled stage so they
+       don't shrink with it. Do not relocate them inside .deck-stage. */
+    .deck-counter {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(10, 14, 26, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      z-index: 1000;
+    }
+    .deck-counter button {
+      width: 36px; height: 36px;
+      background: transparent;
+      color: #fff;
+      border: 0;
+      border-radius: 50%;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s;
+    }
+    .deck-counter button:hover { background: rgba(255, 255, 255, 0.12); }
+    .deck-counter button[disabled] { opacity: 0.3; cursor: default; }
+    .deck-counter .deck-count {
+      padding: 0 14px;
+      letter-spacing: 0.22em;
+    }
+    .deck-counter .deck-count .total { color: rgba(255, 255, 255, 0.5); }
+    .deck-hint {
+      position: fixed;
+      bottom: 26px;
+      right: 28px;
+      color: rgba(255, 255, 255, 0.4);
+      font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    /* Print / PDF stitching — every slide stacks top-to-bottom, one per
+       page. The viewer's "Share → PDF" relies on this; do not remove. */
+    @media print {
+      @page { size: 1920px 1080px; margin: 0; }
+      html, body {
+        width: 1920px !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+      }
+      .deck-shell {
+        position: static !important;
+        display: block !important;
+        inset: auto !important;
+      }
+      .deck-stage {
+        width: 1920px !important;
+        height: auto !important;
+        transform: none !important;
+        box-shadow: none !important;
+        position: static !important;
+      }
+      .slide {
+        display: flex !important;
+        position: relative !important;
+        inset: auto !important;
+        width: 1920px !important;
+        height: 1080px !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .deck-counter, .deck-hint { display: none !important; }
+    }
+  </style>
+  <style>
+    /* SLOT: per-deck styles — typography, layout helpers, slide variants. */
+    .s-title,
+    .s-split,
+    .s-thesis,
+    .s-map,
+    .s-code,
+    .s-close {
+      display: grid;
+      padding: 78px 92px;
+      background:
+        linear-gradient(90deg, rgba(48, 54, 61, 0.42) 1px, transparent 1px) 0 0 / 80px 80px,
+        linear-gradient(rgba(48, 54, 61, 0.3) 1px, transparent 1px) 0 0 / 80px 80px,
+        var(--bg);
+      color: var(--fg);
+    }
+    .s-title,
+    .s-close {
+      background:
+        linear-gradient(90deg, rgba(48, 54, 61, 0.42) 1px, transparent 1px) 0 0 / 80px 80px,
+        linear-gradient(rgba(48, 54, 61, 0.3) 1px, transparent 1px) 0 0 / 80px 80px,
+        radial-gradient(circle at 76% 18%, rgba(88, 166, 255, 0.14), transparent 30%),
+        var(--bg);
+    }
+    .s-title { grid-template-rows: auto 1fr auto; }
+    .s-split { grid-template-columns: 0.9fr 1.1fr; gap: 56px; align-items: center; }
+    .s-thesis { grid-template-rows: auto 1fr auto; gap: 36px; }
+    .s-map { grid-template-rows: auto 1fr auto; gap: 28px; }
+    .s-code { grid-template-columns: 0.82fr 1.18fr; gap: 42px; align-items: center; }
+    .s-close { grid-template-rows: auto 1fr auto; }
+
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+    .title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 116px;
+      line-height: 0.96;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      max-width: 1340px;
+      text-wrap: balance;
+    }
+    .title .dim { color: var(--muted); }
+    .subtitle {
+      max-width: 980px;
+      font-family: var(--font-body);
+      font-size: 34px;
+      line-height: 1.35;
+      color: var(--text);
+      text-wrap: pretty;
+    }
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 24px;
+      letter-spacing: 0.04em;
+    }
+    .h1 {
+      font-family: var(--font-display);
+      font-size: 82px;
+      line-height: 1.02;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      text-wrap: balance;
+    }
+    .lead {
+      font-family: var(--font-body);
+      font-size: 34px;
+      line-height: 1.35;
+      color: var(--text);
+      max-width: 760px;
+      text-wrap: pretty;
+    }
+    .terminal {
+      border: 1px solid var(--line);
+      background: rgba(13, 17, 23, 0.88);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .terminal-bar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: #161b22;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 24px;
+    }
+    .dot { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
+    .red { background: #ff7b72; }
+    .yellow { background: #d29922; }
+    .green { background: #3fb950; }
+    .terminal-title { margin-left: 14px; }
+    .terminal-body {
+      padding: 34px;
+      font-family: var(--font-mono);
+      font-size: 26px;
+      line-height: 1.42;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+    .cmd { color: var(--accent); }
+    .comment { color: var(--muted); }
+    .blue { color: var(--blue); }
+    .purple { color: var(--purple); }
+    .warn { color: var(--yellow); }
+    .danger { color: var(--danger); }
+
+    .stack {
+      display: grid;
+      gap: 22px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 66px 1fr;
+      gap: 22px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(22, 27, 34, 0.86);
+      padding: 24px;
+    }
+    .num {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 24px;
+      background: #0d1117;
+    }
+    .row h3,
+    .card h3,
+    .layer h3 {
+      font-family: var(--font-display);
+      font-size: 34px;
+      line-height: 1.08;
+      margin-bottom: 8px;
+    }
+    .row p,
+    .card p,
+    .layer p,
+    .tiny {
+      font-family: var(--font-body);
+      font-size: 25px;
+      line-height: 1.35;
+      color: var(--text);
+      text-wrap: pretty;
+    }
+    .thesis-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-self: center;
+    }
+    .thesis-card {
+      min-height: 440px;
+      border: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.9);
+      border-radius: 12px;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .thesis-card strong {
+      font-family: var(--font-display);
+      font-size: 48px;
+      line-height: 1.03;
+      color: var(--fg);
+    }
+    .thesis-card span {
+      font-family: var(--font-body);
+      font-size: 27px;
+      line-height: 1.35;
+      color: var(--text);
+      text-wrap: pretty;
+    }
+    .diagram {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      align-items: center;
+    }
+    .node {
+      min-height: 430px;
+      border: 1px solid var(--line);
+      background: #161b22;
+      border-radius: 14px;
+      padding: 36px;
+      position: relative;
+    }
+    .node::after {
+      content: "->";
+      position: absolute;
+      right: -36px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 34px;
+    }
+    .node:last-child::after { display: none; }
+    .node h2 {
+      font-family: var(--font-display);
+      font-size: 58px;
+      margin-bottom: 22px;
+    }
+    .node p {
+      font-family: var(--font-body);
+      font-size: 28px;
+      color: var(--text);
+      line-height: 1.35;
+      text-wrap: pretty;
+    }
+    .matrix {
+      display: grid;
+      grid-template-columns: 0.9fr 1fr 1.1fr 1.1fr;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(13, 17, 23, 0.92);
+    }
+    .cell {
+      min-height: 78px;
+      padding: 18px 20px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-family: var(--font-body);
+      font-size: 24px;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .cell:nth-child(4n) { border-right: 0; }
+    .head {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg);
+      background: #161b22;
+      font-size: 24px;
+    }
+    .surface { color: var(--fg); font-weight: 700; }
+    .layers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-self: stretch;
+    }
+    .layer {
+      border: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.9);
+      border-radius: 12px;
+      padding: 30px;
+    }
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: var(--text);
+      background: #0d1117;
+      font-family: var(--font-mono);
+      font-size: 24px;
+    }
+    .big-quote {
+      align-self: center;
+      max-width: 1280px;
+      font-family: var(--font-display);
+      font-size: 78px;
+      line-height: 1.07;
+      font-weight: 800;
+      text-wrap: balance;
+    }
+    .accent-line {
+      width: 180px;
+      height: 8px;
+      background: var(--accent);
+      margin: 34px 0;
+      border-radius: 999px;
+    }
+    .code-wrap {
+      display: grid;
+      gap: 18px;
+    }
+    .side-note {
+      border-left: 4px solid var(--accent);
+      padding-left: 24px;
+      font-family: var(--font-body);
+      font-size: 29px;
+      line-height: 1.35;
+      color: var(--text);
+      text-wrap: pretty;
+    }
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .check {
+      border: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.9);
+      border-radius: 12px;
+      padding: 28px;
+      font-family: var(--font-body);
+      font-size: 29px;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .check strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 36px;
+      color: var(--fg);
+      margin-bottom: 8px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      align-self: stretch;
+    }
+    .card-grid.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.9);
+      border-radius: 12px;
+      padding: 28px;
+      min-height: 210px;
+    }
+    .card strong {
+      display: block;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      font-size: 24px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .compact .row {
+      padding: 18px 22px;
+      min-height: 0;
+    }
+    .compact .row h3 {
+      font-size: 30px;
+      margin-bottom: 4px;
+    }
+    .compact .row p {
+      font-size: 24px;
+    }
+    .mini-table {
+      display: grid;
+      grid-template-columns: 0.86fr 1fr 1fr 1.04fr;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(13, 17, 23, 0.92);
+    }
+    .mini-table.agents {
+      grid-template-columns: 0.82fr 1fr 1fr 1.1fr;
+    }
+    .mini-table .cell {
+      min-height: 88px;
+      font-size: 24px;
+    }
+    .s-final {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 32px;
+      padding: 78px 92px;
+      background:
+        linear-gradient(90deg, rgba(48, 54, 61, 0.38) 1px, transparent 1px) 0 0 / 80px 80px,
+        linear-gradient(rgba(48, 54, 61, 0.25) 1px, transparent 1px) 0 0 / 80px 80px,
+        radial-gradient(circle at 24% 18%, rgba(63, 185, 80, 0.16), transparent 32%),
+        var(--bg);
+    }
+    .question-pair {
+      align-self: center;
+      display: grid;
+      gap: 42px;
+    }
+    .question-pair .label {
+      font-family: var(--font-mono);
+      color: var(--muted);
+      font-size: 28px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+    }
+    .question-pair .bad,
+    .question-pair .good {
+      font-family: var(--font-display);
+      font-size: 72px;
+      line-height: 1.06;
+      font-weight: 800;
+      text-wrap: balance;
+    }
+    .question-pair .bad { color: var(--muted); }
+    .question-pair .good { color: var(--fg); }
+    .refs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 18px;
+      align-self: stretch;
+    }
+    .ref {
+      border: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.9);
+      border-radius: 12px;
+      padding: 22px;
+    }
+    .ref h3 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .ref p {
+      font-family: var(--font-body);
+      color: var(--text);
+      font-size: 24px;
+      line-height: 1.32;
+      text-wrap: pretty;
+    }
+    .qa {
+      align-self: center;
+      display: grid;
+      gap: 28px;
+    }
+    .qa h1 {
+      font-family: var(--font-display);
+      font-size: 136px;
+      line-height: 0.92;
+      text-transform: uppercase;
+    }
+    .qa p {
+      font-family: var(--font-body);
+      font-size: 36px;
+      color: var(--text);
+      max-width: 980px;
+      line-height: 1.35;
+      text-wrap: pretty;
+    }
+  </style>
+</head>
+<body>
+  <div class="deck-shell">
+    <div class="deck-stage" id="deck-stage" role="region" aria-label="MCP and multi-agent orchestration slide deck">
+
+      <section class="slide active s-title" data-screen-label="01 Title">
+        <div class="kicker">Context Management Game</div>
+        <div>
+          <h1 class="title">MCP &<br>MULTI-AGENT<br>PROTOCOL<br><span class="dim">ORCHESTRATION</span></h1>
+          <div class="accent-line"></div>
+          <p class="subtitle">A web-development workshop: The Context Management Game.</p>
+        </div>
+        <div class="footer"><span>University web-dev audience</span><span>Workshop deck</span></div>
+        <aside class="notes" hidden>Chào mọi người. Hôm nay mình nói về MCP và multi-agent orchestration dưới góc nhìn rất thực tế cho web application development. Mình không muốn biến buổi này thành danh sách tool đang hot. Thứ quan trọng hơn là cách nhìn: phát triển phần mềm với AI thật ra là trò chơi quản lý context. Agent có thấy đúng thông tin không, dùng đúng tool không, bị nhiễu bởi noise không, và cuối cùng có verify được kết quả không.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="02 Why This Topic">
+        <div>
+          <div class="kicker">Why this topic?</div>
+          <h2 class="h1">From tool demo to development architecture</h2>
+          <div class="accent-line"></div>
+          <p class="lead">The interesting question is no longer “which MCP server should I install?” It is “how do I organize context so development gets faster without losing control?”</p>
+        </div>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="terminal-title">student-workflow.txt</span></div>
+          <div class="terminal-body"><span class="comment"># old loop</span>
+copy log -> paste into chat -> hope the model understands
+
+<span class="comment"># stronger loop</span>
+issue + repo + browser + docs + checks
+  -> scoped agent work
+  -> verified patch</div>
+        </div>
+        <aside class="notes" hidden>Khi bắt đầu dùng AI coding assistant, trải nghiệm ban đầu thường là chat với model và yêu cầu nó viết code. Cách đó có giá trị, nhưng chưa đủ cho workflow phát triển phần mềm nghiêm túc. Ecosystem đã đi xa hơn: GitHub, Figma, Vercel, Supabase, Stripe, Playwright và nhiều nền tảng khác đều đưa context vào agent. Câu chuyện không còn là cài server nào, mà là tổ chức context như thế nào để development nhanh hơn, ít lỗi hơn, và vẫn kiểm soát được rủi ro.</aside>
+      </section>
+
+      <section class="slide s-thesis" data-screen-label="03 The Thesis">
+        <div>
+          <div class="kicker">The thesis</div>
+          <h2 class="h1">Access, attention, and the real game</h2>
+        </div>
+        <div class="thesis-grid">
+          <div class="thesis-card"><strong>MCP is the access protocol.</strong><span>It gives agents a standard way to reach files, repos, browsers, databases, logs, design, docs, and product systems.</span></div>
+          <div class="thesis-card"><strong>Multi-agent orchestration is the attention topology.</strong><span>It decides which worker focuses on code, docs, browser, security, or synthesis.</span></div>
+          <div class="thesis-card"><strong>Context management is the game.</strong><span>Better outcomes come from the right evidence, scoped to the right agent, then verified.</span></div>
+        </div>
+        <div class="footer"><span>Access != workflow</span><span>Attention != more tokens</span></div>
+        <aside class="notes" hidden>Nếu chỉ nhớ một slide, mình muốn mọi người nhớ slide này. MCP là access protocol. Nó cho agent cách chuẩn để chạm vào hệ thống bên ngoài. Multi-agent orchestration là attention topology: agent nào tập trung vào code, docs, browser, security, hay synthesis. Context management mới là game thật sự. Model mạnh hơn và context window lớn hơn có ích, nhưng nếu đưa sai context, quá nhiều context, hoặc context chưa verify, agent vẫn đi sai rất nhanh.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="04 The Web-Dev Bottleneck">
+        <div>
+          <div class="kicker">The bottleneck</div>
+          <h2 class="h1">Web development context lives everywhere</h2>
+          <p class="lead">Fast teams reduce the time between question, evidence, patch, and validation.</p>
+        </div>
+        <div class="stack">
+          <div class="row"><div class="num">1</div><div><h3>Context lives everywhere</h3><p>Code, issues, Figma, docs, database schema, browser state, logs, deployments, payments.</p></div></div>
+          <div class="row"><div class="num">2</div><div><h3>The human becomes the integration layer</h3><p>Copying snippets into chat is slow, lossy, and easy to bias.</p></div></div>
+          <div class="row"><div class="num">3</div><div><h3>Verification is the real loop closer</h3><p>Generated code matters less than reproduced behavior and passing checks.</p></div></div>
+          <div class="row"><div class="num">4</div><div><h3>Velocity is context plus action</h3><p>Fast teams reduce the time between question, evidence, patch, and validation.</p></div></div>
+        </div>
+        <aside class="notes" hidden>Thử nhìn vào task rất bình thường: settings page bị lỗi save. Bug report có thể ở GitHub issue. UI intent nằm trong design file hoặc component hiện có. API contract nằm ở backend route. Schema ở database. Lỗi thật ở browser console hoặc network tab. Trước đây con người chính là integration layer: copy log, copy code, copy screenshot vào chat. Velocity không chỉ là AI viết code nhanh, mà là lấy đúng evidence nhanh, sửa đúng chỗ, rồi verify hành vi thật.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="05 The Context Game">
+        <div>
+          <div class="kicker">The Context Management Game</div>
+          <h2 class="h1">Five moves before the code is trustworthy</h2>
+        </div>
+        <div class="stack compact">
+          <div class="row"><div class="num">01</div><div><h3>Acquire</h3><p>Find the right information from code, docs, design, runtime, database, and product systems.</p></div></div>
+          <div class="row"><div class="num">02</div><div><h3>Scope</h3><p>Send the smallest useful subset to the right agent.</p></div></div>
+          <div class="row"><div class="num">03</div><div><h3>Isolate</h3><p>Move noisy exploration, logs, screenshots, and test output into bounded worker contexts.</p></div></div>
+          <div class="row"><div class="num">04</div><div><h3>Compress</h3><p>Return distilled evidence, decisions, references, and next actions.</p></div></div>
+          <div class="row"><div class="num">05</div><div><h3>Govern</h3><p>Control read/write permissions, approvals, logging, and sensitive data boundaries.</p></div></div>
+        </div>
+        <div class="footer"><span>Small context, high evidence</span><span>Not a prompt trick</span></div>
+        <aside class="notes" hidden>Mình chia context management thành năm động tác. Acquire là lấy đúng thông tin từ code, docs, design, runtime, database, product system. Scope là không nhét hết vào prompt, mà gửi phần nhỏ nhất đủ dùng cho đúng agent. Isolate là để việc nhiều noise như log dài, screenshot, test output vào worker context riêng. Compress là trả về evidence đã chưng cất. Govern là kiểm soát quyền đọc, quyền sửa, approval, logging, và dữ liệu nhạy cảm.</aside>
+      </section>
+
+      <section class="slide s-thesis" data-screen-label="06 Bigger Context Is Not Enough">
+        <div class="kicker">Context pollution</div>
+        <div class="big-quote">More context can become more distraction.</div>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="terminal-title">bad-thread.log</span></div>
+          <div class="terminal-body">stack trace x 400 lines
+test retries x 9
+three unrelated files
+old decision from yesterday
+<span class="danger">important clue hidden in the middle</span></div>
+        </div>
+        <aside class="notes" hidden>Một phản xạ tự nhiên là: context window lớn hơn thì cứ đưa hết mọi thứ vào. Nhưng context lớn hơn không đảm bảo model tập trung tốt hơn. Nếu thread chính có quá nhiều log, stack trace, test output, file đọc thử, thông tin quan trọng có thể bị chìm. Đây là context pollution. Mục tiêu không phải là nhồi nhiều nhất có thể, mà là thiết kế luồng context: cái gì cần đọc, ai đọc, đọc trong bao lâu, và trả về dạng nào.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="07 MCP In One Diagram">
+        <div>
+          <div class="kicker">MCP in one diagram</div>
+          <h2 class="h1">HOST -> CLIENT -> SERVER</h2>
+        </div>
+        <div class="diagram">
+          <div class="node"><h2>Host</h2><p>LLM app or IDE: Codex, Cursor, ChatGPT, VS Code. This is where the agent experience lives.</p></div>
+          <div class="node"><h2>Client</h2><p>Connection layer inside the host: JSON-RPC, auth, and consent.</p></div>
+          <div class="node"><h2>Server</h2><p>External context and action surface: resources, prompts, and tools.</p></div>
+        </div>
+        <div class="footer"><span>MCP does not decide the workflow</span><span>It standardizes access</span></div>
+        <aside class="notes" hidden>MCP có thể hiểu đơn giản là chuẩn kết nối giữa AI application và hệ thống bên ngoài. Host là ứng dụng AI hoặc IDE: Codex, VS Code, Cursor, ChatGPT. Bên trong host có client, client nói chuyện với MCP server. Server expose resources, prompts, tools. Điểm quan trọng: MCP không tự quyết định workflow. MCP chỉ chuẩn hóa cánh cửa truy cập. Agent nào được đi qua cánh cửa nào, lúc nào, với quyền gì là bài toán orchestration.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="08 Protocol Surface">
+        <div>
+          <div class="kicker">From plug to protocol surface</div>
+          <h2 class="h1">The direction is infrastructure, not novelty</h2>
+          <p class="lead">The recent direction frames MCP as moving toward auth, consent, schema, tasks, cacheability, tracing, UI, and lifecycle.</p>
+        </div>
+        <div class="stack">
+          <div class="row"><div class="num">A</div><div><h3>2025-11-25 stable direction</h3><p>Authorization discovery, incremental consent, elicitation, sampling tools, JSON Schema 2020-12.</p></div></div>
+          <div class="row"><div class="num">B</div><div><h3>2026-07-28 release-candidate direction</h3><p>Stateless core, MCP Apps, Tasks extension, authorization hardening, cacheable lists, trace context.</p></div></div>
+          <div class="row"><div class="num">C</div><div><h3>Production implication</h3><p>MCP becomes a surface for auth, observability, UI, and lifecycle.</p></div></div>
+        </div>
+        <aside class="notes" hidden>Điểm thú vị là MCP đang đi từ tool plug thành protocol surface nghiêm túc hơn. Các thay đổi gần đây không chỉ là thêm tool mới. Nó đi vào authorization, consent, schema, task lifecycle, cacheability, tracing, và MCP Apps. Với bài talk này, mình không cần mọi người nhớ hết từng thay đổi. Chỉ cần nhớ hướng đi: MCP đang trở thành lớp hạ tầng để agent làm việc với thế giới bên ngoài.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="09 Web Development Context Map">
+        <div>
+          <div class="kicker">Web development context map</div>
+          <h2 class="h1">Choose MCP by phase, not by hype</h2>
+        </div>
+        <div class="matrix">
+          <div class="cell head">Surface</div><div class="cell head">Context needed</div><div class="cell head">MCP examples</div><div class="cell head">Why it matters</div>
+          <div class="cell surface">Product/design</div><div class="cell">Frames, tokens, variants, design rules</div><div class="cell">Figma MCP</div><div class="cell">Less design-to-code guessing</div>
+          <div class="cell surface">UI components</div><div class="cell">Registry, primitives, examples</div><div class="cell">shadcn MCP</div><div class="cell">Keeps UI inside real vocabulary</div>
+          <div class="cell surface">Docs/API usage</div><div class="cell">Current framework/library behavior</div><div class="cell">Context7, Exa, vendor docs</div><div class="cell">Reduces stale API mistakes</div>
+          <div class="cell surface">Code/repo</div><div class="cell">Files, PRs, issues, CI, scanning</div><div class="cell">GitHub, DeepWiki, GKG, Morph-MCP</div><div class="cell">Grounds changes in reality</div>
+          <div class="cell surface">Browser behavior</div><div class="cell">DOM, accessibility, console, network</div><div class="cell">Playwright MCP</div><div class="cell">Validates real UI behavior</div>
+          <div class="cell surface">DB/backend</div><div class="cell">Schema, SQL, migrations, logs</div><div class="cell">Supabase, Neon</div><div class="cell">Makes assumptions explicit</div>
+          <div class="cell surface">Runtime/business</div><div class="cell">Deployments, logs, payments</div><div class="cell">Vercel, Sentry, Clerk, Stripe</div><div class="cell">Connects code to production</div>
+        </div>
+        <aside class="notes" hidden>Đây là map cho web application development. Một web app không chỉ có code. Nó có product context, design context, component context, docs context, repo context, browser context, database context, deployment context, và business API context. Mỗi lớp có loại MCP server phù hợp. Slide này không có nghĩa là bật hết tất cả. Nó có nghĩa là mỗi phase cần context khác nhau, và mình chọn MCP theo phase đó.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="10 Servers That Serve The Thesis">
+        <div>
+          <div class="kicker">MCP servers that serve the thesis</div>
+          <h2 class="h1">The goal is better context routing</h2>
+        </div>
+        <div class="layers">
+          <div class="layer"><h3>Context source layer</h3><p>Help the agent understand the problem before editing.</p><div class="pill-list"><span class="pill">Figma</span><span class="pill">shadcn</span><span class="pill">Context7 / Exa</span><span class="pill">GitHub</span><span class="pill">Supabase / Neon</span><span class="pill">DeepWiki / GKG / Morph-MCP</span></div></div>
+          <div class="layer"><h3>Verification layer</h3><p>Help the agent prove the result against real behavior.</p><div class="pill-list"><span class="pill">Playwright</span><span class="pill">Sentry</span><span class="pill">Vercel logs</span><span class="pill">Semgrep</span><span class="pill">Snyk</span></div></div>
+          <div class="layer"><h3>Orchestration / safety layer</h3><p>Control profiles, lifecycle, credentials, tracing, read-only modes, and approvals.</p><div class="pill-list"><span class="pill">Docker MCP Gateway</span><span class="pill">Dynamic MCP</span><span class="pill">allowlists</span><span class="pill">approvals</span></div></div>
+        </div>
+        <div class="footer"><span>Not more MCP</span><span>Better routes</span></div>
+        <aside class="notes" hidden>Nếu phải chọn MCP server cho thesis này, mình sẽ không xếp theo độ nổi tiếng. Mình xếp theo vai trò trong context game. Context source giúp agent hiểu bài toán tốt hơn. Verification giúp agent chứng minh kết quả. Orchestration và safety kiểm soát profile, lifecycle, credentials, tracing, read-only mode, approval. Docker MCP nên nằm ở layer này vì nó phục vụ trực tiếp context routing và governance.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="11 Good And Ugly">
+        <div>
+          <div class="kicker">The good and the ugly</div>
+          <h2 class="h1">MCP raises capability and risk together</h2>
+          <p class="lead">Better context creates better agents. Broader tool access creates broader failure modes.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card"><strong>The Good</strong><h3>Less guessing</h3><p>Agents can ground decisions in repo, docs, browser, database, and runtime context.</p></div>
+          <div class="card"><strong>The Good</strong><h3>Faster dev loops</h3><p>Context acquisition and verification move closer to the code change.</p></div>
+          <div class="card"><strong>The Ugly</strong><h3>Tool overload</h3><p>Every tool definition costs context and makes tool choice harder.</p></div>
+          <div class="card"><strong>The Ugly</strong><h3>Scope mistakes</h3><p>Prompt injection, broad writes, cost explosion, and parallel conflicts become architecture concerns.</p></div>
+        </div>
+        <aside class="notes" hidden>MCP có mặt rất tốt: giảm guessing, agent grounded hơn, dev loop nhanh hơn, audit workflow tốt hơn nếu trace tool call rõ. Nhưng mặt xấu cũng thật: tool overload, prompt injection, scope mistake, cost explosion, parallel write conflict. Với multi-agent, nhiều agent nghĩa là nhiều context, nhiều tool call, nhiều token, và nếu cùng sửa code thì conflict tăng nhanh.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="12 Server Selection Filter">
+        <div>
+          <div class="kicker">Server selection filter</div>
+          <h2 class="h1">Do not add a server just because it exists</h2>
+        </div>
+        <div class="stack">
+          <div class="row"><div class="num">1</div><div><h3>Does it improve context quality?</h3><p>Context7 gives current docs instead of model memory.</p></div></div>
+          <div class="row"><div class="num">2</div><div><h3>Does it reduce human copy-paste?</h3><p>GitHub, Figma, and Supabase bring structured project context directly.</p></div></div>
+          <div class="row"><div class="num">3</div><div><h3>Does it close a verification loop?</h3><p>Playwright turns browser behavior into evidence.</p></div></div>
+          <div class="row"><div class="num">4</div><div><h3>Can it be scoped safely?</h3><p>Read-only, project-scoped, allowlisted, and approval-gated writes.</p></div></div>
+        </div>
+        <aside class="notes" hidden>Chọn MCP server bằng bốn câu hỏi. Server này có cải thiện chất lượng context không? Có giảm copy-paste thủ công không? Có đóng verification loop không? Và có scope an toàn được không? Docs MCP read-only thường đủ. GitHub có thể đọc issue trước, comment hoặc merge phải approval. Database nên development branch và read-only khi inspect schema. Billing hoặc auth phải giới hạn scope và approval rõ.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="13 Design And Component Context">
+        <div>
+          <div class="kicker">Design and component context</div>
+          <h2 class="h1">Reduce design-to-code guessing</h2>
+          <p class="lead">Use Figma when a real design exists. Use shadcn context when the live demo needs reliable component vocabulary.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card"><strong>Figma MCP</strong><h3>When design is real</h3><p>Frames, variables, components, screenshots, assets, Code Connect mappings, and design-to-code context.</p></div>
+          <div class="card"><strong>shadcn MCP</strong><h3>Good for live demos</h3><p>Registry search, installable components, known APIs, and approved UI vocabulary.</p></div>
+          <div class="card"><strong>Workshop stance</strong><h3>Do not demo uncertain sources</h3><p>If there is no prepared Figma frame, keep Figma conceptual and demo repo, test, browser, and Codex agents.</p></div>
+          <div class="card"><strong>Component goal</strong><h3>Stay inside the system</h3><p>The UI agent should not invent components or use the wrong API when a registry exists.</p></div>
+        </div>
+        <aside class="notes" hidden>Với web app, design context thường mất nhiều khi đi từ designer sang developer. Nếu có Figma file thật, Figma MCP giúp agent đọc frame, component, variable, asset, và một phần intent. Nhưng nếu demo không có frame chuẩn bị sẵn, đừng demo Figma. Trong workshop, Figma là ví dụ concept; live demo dựa trên repo, test, browser, Codex agents. shadcn MCP vẫn rất tốt vì giúp agent ở trong vocabulary của design system.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="14 Docs Context">
+        <div>
+          <div class="kicker">Docs context</div>
+          <h2 class="h1">Fresh APIs beat confident memory</h2>
+          <p class="lead">Load docs just in time, prefer official sources, return exact behavior, and cite the source.</p>
+        </div>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="terminal-title">docs_researcher.output</span></div>
+          <div class="terminal-body"><span class="comment">Problem</span>
+Model memory gets stale; framework APIs move fast.
+
+<span class="comment">Pattern</span>
+load docs just in time
+prefer official/vendor docs
+return exact behavior
+cite the source
+
+<span class="comment">Example</span>
+Next.js 16 + React 19 + Clerk Billing:
+verify provider, middleware, server boundary,
+and billing authorization pattern before coding.</div>
+        </div>
+        <aside class="notes" hidden>Một lỗi phổ biến khi dùng AI coding là model dùng API cũ. Framework đổi routing, SDK đổi parameter, package đổi import path, nhưng model vẫn trả lời rất tự tin. Context7, Exa, hoặc vendor docs MCP có giá trị ở đây. Không preload docs vào mọi turn; chỉ gọi docs khi cần API cụ thể. Worker nên trả về behavior, source, impact, và code boundary, không chỉ copy docs thô.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="15 Code And Delivery Context">
+        <div>
+          <div class="kicker">Code and delivery context</div>
+          <h2 class="h1">Repo context is more than files</h2>
+        </div>
+        <div class="layers">
+          <div class="layer"><h3>GitHub MCP</h3><p>Issues, PRs, review comments, Actions, CI, security and code scanning.</p><div class="pill-list"><span class="pill">issue</span><span class="pill">PR diff</span><span class="pill">CI log</span></div></div>
+          <div class="layer"><h3>Code intelligence</h3><p>DeepWiki, GKG, Morph-MCP, cross-repo search, ownership, and data flow.</p><div class="pill-list"><span class="pill">relationship map</span><span class="pill">blast radius</span></div></div>
+          <div class="layer"><h3>Parent need</h3><p>A short map of paths, dependencies, risks, and validation steps, not a whole index.</p><div class="pill-list"><span class="pill">facts</span><span class="pill">files</span><span class="pill">risk</span></div></div>
+        </div>
+        <aside class="notes" hidden>Khi nói repo context, mình không chỉ nói file trong thư mục. Một thay đổi web app thường bắt đầu từ issue, đi qua branch, PR, review comment, CI check, action log, có thể có code scanning. GitHub MCP giúp agent chạm vào lớp delivery context này. Với codebase lớn, grep đôi khi chưa đủ; agent cần hiểu relationship: request flow, data model, component hook, API route, schema dependency. Parent không cần toàn bộ index; parent cần map ngắn gọn về paths, dependencies, và risk.</aside>
+      </section>
+
+      <section class="slide s-thesis" data-screen-label="16 Verification Context">
+        <div class="kicker">Verification context</div>
+        <div class="big-quote">The browser is the truth.</div>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="terminal-title">browser_debugger.evidence</span></div>
+          <div class="terminal-body">opened /settings
+clicked Save
+checked DOM + accessibility tree
+inspected console + network
+confirmed persisted state after reload</div>
+        </div>
+        <aside class="notes" hidden>Đối với frontend, browser là sự thật. Code nhìn hợp lý chưa đủ. TypeScript pass chưa đủ. Người dùng thật tương tác với browser: click, type, scroll, resize, loading state, empty state, error state. Playwright MCP hợp với luận điểm này vì nó dùng accessibility snapshot và browser interaction để biến hành vi UI thành evidence có cấu trúc. Khi agent nói done, mình muốn evidence hơn là cảm giác tự tin.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="17 Database Context">
+        <div>
+          <div class="kicker">Database context</div>
+          <h2 class="h1">Useful, powerful, and dangerous</h2>
+          <p class="lead">Supabase and Neon can turn schema assumptions into facts, but database access is an operations surface.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card"><strong>Useful context</strong><h3>Schema and relationships</h3><p>Migrations, SQL behavior, logs, advisors, and generated types.</p></div>
+          <div class="card"><strong>Safety rule</strong><h3>Development branch first</h3><p>Read-only by default, project scope, feature restriction, approval for writes.</p></div>
+          <div class="card"><strong>Do not guess</strong><h3>Inspect before typing</h3><p>Use schema and constraints instead of inventing table fields or relationships.</p></div>
+          <div class="card"><strong>Production data</strong><h3>Not all useful context belongs in the model</h3><p>Separate inspection, privacy, and write authority.</p></div>
+        </div>
+        <aside class="notes" hidden>Database context rất mạnh vì giúp agent ngừng đoán. Thay vì đoán table có field gì, agent inspect schema. Thay vì đoán relationship, nó đọc constraint. Nhưng đây cũng là vùng nguy hiểm vì database MCP có thể là operations surface. Default của mình là development branch trước, read-only trước, project scope rõ, feature restriction rõ, và mọi write hoặc destructive action phải có approval.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="18 Runtime Business Context">
+        <div>
+          <div class="kicker">Runtime and business context</div>
+          <h2 class="h1">Production signals are context too</h2>
+          <p class="lead">Runtime observers should return failure signatures, not dump production noise into the parent thread.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card"><strong>Vercel / Sentry</strong><h3>Runtime evidence</h3><p>Deployments, logs, stack traces, release impact, and production signals.</p></div>
+          <div class="card"><strong>Clerk Auth + Billing</strong><h3>Trust boundary</h3><p>Auth state, organizations, permissions, plans, features, subscriptions, checkout, and billing UI.</p></div>
+          <div class="card"><strong>Local demo stance</strong><h3>No production instance required</h3><p>Use docs research, UI boundary drafting, and reviewer checks before real writes.</p></div>
+          <div class="card"><strong>Approval gate</strong><h3>Billing writes require humans</h3><p>Plans, subscriptions, customers, production secrets, and env changes stay gated.</p></div>
+        </div>
+        <aside class="notes" hidden>Một bug production thường bắt đầu từ signal: user report, Sentry issue, Vercel log, failed deployment. Runtime context giúp chuyển từ tôi đoán lỗi ở đây sang failure signature là thế này. Với workshop, Clerk là ví dụ business context vì chạm cả Auth và Billing. Nhưng Clerk Billing là trust boundary: agent có thể đọc docs và draft code, nhưng tạo hoặc sửa plan, subscription, production secret key phải approval-gate.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="19 Docker MCP Gateway">
+        <div>
+          <div class="kicker">Gateway / broker pattern</div>
+          <h2 class="h1">Do not expose every server to every agent</h2>
+        </div>
+        <div class="stack">
+          <div class="row"><div class="num">1</div><div><h3>Use a gateway or broker</h3><p>Decide which toolsets are visible to each agent.</p></div></div>
+          <div class="row"><div class="num">2</div><div><h3>Reduce schema load</h3><p>Tool allowlists and deferred loading keep the context window cleaner.</p></div></div>
+          <div class="row"><div class="num">3</div><div><h3>Map scopes to roles</h3><p>OAuth scopes and read/write policies should match responsibilities.</p></div></div>
+          <div class="row"><div class="num">4</div><div><h3>Trace tool calls</h3><p>Observability is how teams debug agent behavior and audit risk.</p></div></div>
+        </div>
+        <aside class="notes" hidden>Khi team lớn hơn, pattern hợp lý không phải mỗi agent tự kết nối trực tiếp đến mọi MCP server. Pattern hợp lý hơn là gateway hoặc broker. Docker MCP Gateway quản lý profile, routing, credentials, lifecycle, container isolation, và tracing cho nhiều server. Gateway quyết định docs_researcher thấy docs tool, browser_debugger thấy browser tool, db_mapper thấy database read-only tool. Lợi ích là giảm schema load, tăng governance, và có trace khi workflow fail.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="20 Multi-Agent Topology">
+        <div>
+          <div class="kicker">Multi-agent topology</div>
+          <h2 class="h1">Subagents are context quarantine</h2>
+        </div>
+        <div class="layers">
+          <div class="layer"><h3>Main agent</h3><p>Decomposes, delegates, and decides. It holds intent, constraints, and final integration.</p><div class="pill-list"><span class="pill">intent</span><span class="pill">constraints</span><span class="pill">decision</span></div></div>
+          <div class="layer"><h3>Subagents</h3><p>repo_mapper, docs_researcher, browser_debugger, reviewer, and focused workers.</p><div class="pill-list"><span class="pill">code paths</span><span class="pill">docs</span><span class="pill">runtime evidence</span></div></div>
+          <div class="layer"><h3>Return format</h3><p>Noisy exploration goes out. Distilled facts, uncertainties, file references, and validation steps come back.</p><div class="pill-list"><span class="pill">facts</span><span class="pill">uncertainty</span><span class="pill">next action</span></div></div>
+        </div>
+        <aside class="notes" hidden>Main agent không nên tự đọc hết repo, tra docs, chạy browser, đọc log, review security, rồi nhớ hết mọi thứ trong một thread. Main agent nên điều phối: phân rã vấn đề, giao việc, đặt constraint, quyết định cuối cùng. Subagent là context quarantine. Nó nhận nhiệm vụ hẹp, tool hẹp, context riêng, xử lý noise, rồi trả về summary sạch.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="21 Context Contract">
+        <div>
+          <div class="kicker">The context contract</div>
+          <h2 class="h1">Parallel work needs explicit boundaries</h2>
+        </div>
+        <div class="card-grid three">
+          <div class="card"><strong>Purpose</strong><h3>Decision or artifact</h3><p>What does this agent own?</p></div>
+          <div class="card"><strong>Input context</strong><h3>Starting evidence</h3><p>Which files, docs, logs, or tools matter?</p></div>
+          <div class="card"><strong>Allowed tools</strong><h3>Visible surfaces</h3><p>Which MCP servers and built-ins are visible?</p></div>
+          <div class="card"><strong>Write scope</strong><h3>Conflict boundary</h3><p>Which files or systems may be changed?</p></div>
+          <div class="card"><strong>Approval rules</strong><h3>Human gates</h3><p>What requires confirmation?</p></div>
+          <div class="card"><strong>Output schema</strong><h3>Decision-grade summary</h3><p>Facts, files, sources, uncertainty, recommendation, validation.</p></div>
+        </div>
+        <aside class="notes" hidden>Nếu dùng multi-agent mà không có contract, mình chỉ tạo ra hỗn loạn song song. Contract nói rõ agent này được suy nghĩ về phần nào, dùng tool nào, sửa gì, và trả evidence dạng nào. Purpose phải cụ thể. Input context phải có starting point. Allowed tools phải hẹp theo role. Write scope chống conflict. Approval rules phải cụ thể. Output schema ép worker trả về decision-grade summary, không phải toàn bộ log.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="22 Codex Web-Dev Cycle">
+        <div>
+          <div class="kicker">Codex web-dev cycle</div>
+          <h2 class="h1">From intake to observed ship</h2>
+        </div>
+        <div class="stack compact">
+          <div class="row"><div class="num">1</div><div><h3>Context intake</h3><p>Main agent reads request, AGENTS.md, repo docs; spawns read-only explorers when space is wide.</p></div></div>
+          <div class="row"><div class="num">2</div><div><h3>Plan and decomposition</h3><p>Convert findings into a story-sized plan, owners, acceptance criteria, and write boundaries.</p></div></div>
+          <div class="row"><div class="num">3</div><div><h3>Implementation</h3><p>Main agent integrates; subagents handle bounded UI, API, DB, or copy work when ownership is clean.</p></div></div>
+          <div class="row"><div class="num">4</div><div><h3>Validation</h3><p>Run tests, browser checks, security review, and summarize high-noise logs.</p></div></div>
+          <div class="row"><div class="num">5</div><div><h3>Ship and observe</h3><p>Prepare PR summary; use GitHub, Vercel, and Sentry only as needed, with production read-only.</p></div></div>
+        </div>
+        <aside class="notes" hidden>Áp dụng vào Codex, cycle bắt đầu bằng context intake: main agent đọc request, AGENTS.md, repo docs, và spawn explorer read-only nếu rộng. Sau đó planning: biến context đã nén thành plan nhỏ, acceptance criteria, write boundary. Implementation chỉ parallel khi boundary sạch. Validation là tests, browser, security review, log triage. Cuối cùng ship and observe: PR summary, GitHub/Vercel/Sentry khi cần, production context read-only và scope chặt.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="23 Recommended Agent Set">
+        <div>
+          <div class="kicker">Recommended Codex agent set</div>
+          <h2 class="h1">Small roles beat one giant worker</h2>
+        </div>
+        <div class="mini-table agents">
+          <div class="cell head">Agent</div><div class="cell head">Context needed</div><div class="cell head">MCP examples</div><div class="cell head">Why it matters</div>
+          <div class="cell surface">repo_mapper</div><div class="cell">Read-only code explorer</div><div class="cell">GitHub / GKG / Morph-MCP</div><div class="cell">Maps files, data flow, risks</div>
+          <div class="cell surface">docs_researcher</div><div class="cell">Version-sensitive verifier</div><div class="cell">Context7 / Exa / vendor docs</div><div class="cell">Returns sourced behavior</div>
+          <div class="cell surface">component_mapper</div><div class="cell">Component/context mapper</div><div class="cell">shadcn / local UI patterns</div><div class="cell">Components, conventions, layout intent</div>
+          <div class="cell surface">browser_debugger</div><div class="cell">UI behavior reproducer</div><div class="cell">Playwright / Browser</div><div class="cell">Steps, console, network clues</div>
+          <div class="cell surface">ui_fixer</div><div class="cell">Targeted frontend worker</div><div class="cell">Repo + tests</div><div class="cell">Smallest defensible UI change</div>
+          <div class="cell surface">reviewer</div><div class="cell">Read-only owner review</div><div class="cell">Diff / tests / security</div><div class="cell">Findings with file references</div>
+        </div>
+        <aside class="notes" hidden>Nếu setup project cho workshop, mình bắt đầu với các agent hẹp. repo_mapper read-only, map code path, data flow, risk. docs_researcher verify API behavior bằng Context7, Exa, vendor docs. component_mapper đọc registry hoặc local UI patterns. browser_debugger reproduce behavior và trả evidence. ui_fixer có quyền sửa frontend nhưng scope nhỏ. reviewer read-only, tập trung correctness, regression, security, missing tests. Agent tốt là agent hẹp.</aside>
+      </section>
+
+      <section class="slide s-split" data-screen-label="24 Workshop Scope">
+        <div>
+          <div class="kicker">Workshop scope vs advanced path</div>
+          <h2 class="h1">Codex-native first, product platform later</h2>
+          <p class="lead">The workshop proves context routing with repo work, local browser verification, MCP setup, and custom agents.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card"><strong>Use here</strong><h3>Interactive repo work</h3><p>.codex/agents/*.toml, local shell/browser loop, MCP setup, test and browser verification.</p></div>
+          <div class="card"><strong>Use here</strong><h3>Docker MCP Gateway</h3><p>A setup and routing layer for profiles, credentials, lifecycle, and tool visibility.</p></div>
+          <div class="card"><strong>Advanced path</strong><h3>Custom agentic product</h3><p>App-owned state, workflow, handoffs, guardrails, approvals, and traces.</p></div>
+          <div class="card"><strong>Advanced path</strong><h3>Codex as specialist</h3><p>Use Codex as one coding specialist inside a larger system built with an agent SDK.</p></div>
+        </div>
+        <aside class="notes" hidden>Trong workshop, mình tập trung vào Codex-native workflow: repo, AGENTS.md, custom agents trong .codex/agents, MCP setup, local shell, test runner, browser verification, Docker MCP Gateway. Agents SDK là advanced path cho câu hỏi khác: build một agentic product hoặc workflow automation platform riêng. Workshop không cần Agents SDK để chứng minh thesis; Codex subagents, MCP, gateway, test, browser verification đã đủ.</aside>
+      </section>
+
+      <section class="slide s-code" data-screen-label="25 Demo A">
+        <div>
+          <div class="kicker">Demo A</div>
+          <h2 class="h1">Repo context to verified UI slice</h2>
+          <p class="side-note">Goal: turn the `ai20k-cohort-2-demo` scaffold into a verified harness-status slice.</p>
+        </div>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="terminal-title">demo-a.route</span></div>
+          <div class="terminal-body">repo_mapper
+  -> docs_researcher
+  -> component_mapper
+  -> ui_fixer
+  -> browser_debugger
+  -> reviewer
+
+MCP: Codex agents, optional Context7/Exa,
+optional GKG/Morph-MCP, optional Playwright,
+Docker MCP Gateway setup
+
+Teaching point:
+parent carries decisions;
+workers absorb repo, docs, browser,
+and tool-selection detail.</div>
+        </div>
+        <aside class="notes" hidden>Demo đầu tiên dựa trên repo thật hoangnb24/ai20k-cohort-2-demo. Repo là Better-T-Stack monorepo: Next.js app ở apps/web, shared UI ở packages/ui, env contract ở packages/env, Drizzle ở packages/db, Harness docs trong docs. Task: tạo harness-status slice nhỏ cho trang chủ, hiển thị stack, database schema status, proof matrix status, next action từ docs. Không production service, không auth/billing thật. Parent giữ decision, worker đọc docs/code đúng phần, UI worker sửa boundary nhỏ, browser worker verify.</aside>
+      </section>
+
+      <section class="slide s-code" data-screen-label="26 Demo B">
+        <div>
+          <div class="kicker">Demo B</div>
+          <h2 class="h1">Production bug loop</h2>
+          <p class="side-note">Goal: investigate a frontend production error and patch the smallest fix.</p>
+        </div>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="terminal-title">demo-b.route</span></div>
+          <div class="terminal-body">runtime_observer
+  -> repo_mapper
+  -> docs_researcher
+  -> fixer
+  -> test_runner
+
+MCP: Vercel, Sentry, GitHub,
+Context7/Exa, Playwright
+
+Teaching point:
+runtime context enters only when needed
+and returns as a failure signature.</div>
+        </div>
+        <aside class="notes" hidden>Demo thứ hai là production bug loop. Giả sử có lỗi frontend ở production. runtime_observer đọc Sentry hoặc Vercel log và trả về failure signature. repo_mapper map signature về code path. docs_researcher kiểm tra framework hoặc SDK nếu version-specific. fixer sửa thay đổi nhỏ nhất. test_runner hoặc browser_debugger verify lại. Runtime context nhiều noise, nên worker đọc log và trả về signature sạch: lỗi gì, ở đâu, reproduction path, fix nhỏ nhất.</aside>
+      </section>
+
+      <section class="slide s-code" data-screen-label="27 Demo C">
+        <div>
+          <div class="kicker">Demo C</div>
+          <h2 class="h1">Full-stack feature slice</h2>
+          <p class="side-note">Goal: add a small feature with database, auth, and billing constraints.</p>
+        </div>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="terminal-title">demo-c.route</span></div>
+          <div class="terminal-body">planner
+  -> db_mapper
+  -> api_worker
+  -> clerk_researcher
+  -> frontend_worker
+  -> tester
+
+MCP: Supabase/Neon, Clerk, GitHub,
+Context7/Exa, Playwright
+
+Teaching point:
+each trust boundary gets its own agent,
+tools, and approval rules.</div>
+        </div>
+        <aside class="notes" hidden>Demo thứ ba advanced hơn: feature full-stack nhỏ có database, auth, billing constraint. planner chia scope. db_mapper đọc schema read-only. api_worker sửa backend logic. clerk_researcher kiểm tra Auth + Billing docs: session, organization, feature gate, subscription, checkout, billing UI. Nhưng nó không tự tạo plan, update subscription, hoặc dùng production secret key. frontend_worker làm UI. tester verify flow. Mỗi trust boundary có agent, tool, scope, approval riêng.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="28 Security Governance">
+        <div>
+          <div class="kicker">Security and governance</div>
+          <h2 class="h1">Context is power</h2>
+        </div>
+        <div class="card-grid">
+          <div class="card"><strong>Risks</strong><h3>Prompt injection</h3><p>Tool output can carry untrusted instructions into the agent loop.</p></div>
+          <div class="card"><strong>Risks</strong><h3>Overbroad scopes</h3><p>OAuth scope, production data exposure, and silent tool behavior changes expand blast radius.</p></div>
+          <div class="card"><strong>Mitigations</strong><h3>Official servers first</h3><p>Prefer official sources, read-only defaults, tool filtering, and narrow projects.</p></div>
+          <div class="card"><strong>Mitigations</strong><h3>Gate and trace writes</h3><p>Approval-gated writes and trace logs make agent behavior legible.</p></div>
+        </div>
+        <div class="footer"><span>MCP hands agents more power</span><span>Orchestration keeps it legible</span></div>
+        <aside class="notes" hidden>Mình không muốn kết thúc bằng hype. MCP và multi-agent tăng productivity, nhưng cũng tăng capability và risk. Tool output có thể chứa prompt injection. OAuth scope quá rộng làm agent thấy hoặc làm nhiều hơn cần thiết. Production data đi vào context tạo privacy và compliance risk. Mitigation thực tế: official server first, read-only mặc định, tool filtering, approval-gated writes, trace mọi tool call quan trọng. Context is power; orchestration giữ power đó legible.</aside>
+      </section>
+
+      <section class="slide s-final" data-screen-label="29 Final Thesis">
+        <div class="kicker">Final thesis</div>
+        <div class="question-pair">
+          <div>
+            <div class="label">Do not ask</div>
+            <div class="bad">“How many MCP servers can I install?”</div>
+          </div>
+          <div>
+            <div class="label">Ask</div>
+            <div class="good">“What context does this agent need to make the next correct move?”</div>
+          </div>
+        </div>
+        <div class="footer"><span>Right context</span><span>Right tool</span><span>Right permission</span><span>Verified result</span></div>
+        <aside class="notes" hidden>Mình muốn kết thúc bằng cách đổi câu hỏi. Câu hỏi không phải là cài được bao nhiêu MCP server, hay có bao nhiêu agent chạy song song. Câu hỏi đúng hơn là: agent này cần context gì để đưa ra nước đi đúng tiếp theo? Nếu context nằm trong docs, dùng docs MCP. Nếu nằm trong browser, dùng Playwright. Nếu quá noisy, giao cho subagent. Nếu nhạy cảm, scope lại và yêu cầu approval. Developer tương lai là người thiết kế môi trường để agent thấy đúng thông tin, dùng đúng tool, có đúng quyền, và verify được kết quả.</aside>
+      </section>
+
+      <section class="slide s-map" data-screen-label="30 Primary References">
+        <div>
+          <div class="kicker">Primary references</div>
+          <h2 class="h1">Read deeper after the workshop</h2>
+        </div>
+        <div class="refs">
+          <div class="ref"><h3>MCP spec</h3><p>2025-06-18 and 2025-11-25 changelog. Protocol core and changes.</p></div>
+          <div class="ref"><h3>MCP RC</h3><p>2026-07-28 release candidate: stateless core, Apps, Tasks.</p></div>
+          <div class="ref"><h3>OpenAI</h3><p>MCP/connectors, Codex subagents, optional Agents SDK.</p></div>
+          <div class="ref"><h3>Research</h3><p>Context rot report as long-context reliability backdrop.</p></div>
+          <div class="ref"><h3>Web MCPs</h3><p>Figma, shadcn, Playwright, Vercel, GitHub, Supabase, Neon, Clerk, Stripe, Context7, Exa, Morph-MCP, GKG.</p></div>
+        </div>
+        <div class="footer"><span>MCP and multi-agent are infrastructure</span><span>Routing context is the craft</span></div>
+        <aside class="notes" hidden>Đây là phần reference để mọi người đọc sâu hơn sau buổi này. Mình ưu tiên official docs khi nói về protocol và MCP server: MCP specification, OpenAI Codex docs, optional Agents SDK docs, rồi docs của Figma, Playwright, GitHub, Supabase, Neon, Clerk, Stripe, Vercel, Context7, Exa, Morph-MCP, GKG. Nếu muốn đào sâu về context dài và vì sao nhiều context không phải lúc nào cũng tốt, đọc thêm research về context rot. Ý chính: MCP và multi-agent không phải magic. Chúng là infrastructure để routing context tốt hơn.</aside>
+      </section>
+
+      <section class="slide s-close" data-screen-label="31 Q&A">
+        <div class="kicker">Q&A</div>
+        <div class="qa">
+          <h1>Questions?</h1>
+          <p>MCP opens the doors. Multi-agent orchestration routes attention. Context management decides whether the system actually works.</p>
+        </div>
+        <div class="footer"><span>Humans steer</span><span>Agents execute</span></div>
+        <aside class="notes" hidden>Cảm ơn mọi người. Nếu có một takeaway cuối cùng, mình muốn nói thế này: MCP mở cửa vào hệ thống bên ngoài. Multi-agent orchestration quyết định attention đi đâu. Nhưng context management mới quyết định hệ thống đó có làm việc đáng tin hay không. Bây giờ mình mở phần câu hỏi.</aside>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Framework chrome — DO NOT EDIT below this line. -->
+  <nav class="deck-counter" role="navigation" aria-label="Deck navigation">
+    <button type="button" id="deck-prev" aria-label="Previous slide">‹</button>
+    <span class="deck-count"><span id="deck-cur">01</span> <span class="total">/ <span id="deck-total">01</span></span></span>
+    <button type="button" id="deck-next" aria-label="Next slide">›</button>
+  </nav>
+  <div class="deck-hint">← / → · space</div>
+
+  <script>
+    (function () {
+      var stage = document.getElementById('deck-stage');
+      var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+      var prev = document.getElementById('deck-prev');
+      var next = document.getElementById('deck-next');
+      var cur = document.getElementById('deck-cur');
+      var total = document.getElementById('deck-total');
+      var STORE = 'deck:idx:' + (location.pathname || '/');
+      var idx = 0;
+
+      // ---- scale-to-fit ---------------------------------------------------
+      // The stage is 1920×1080 and sits at .deck-shell's (0, 0) in normal
+      // block flow — the shell is intentionally NOT a grid/flex container,
+      // so the stage's natural top-left is (0, 0). We scale via transform
+      // with transform-origin:top-left, then translate by the remainder to
+      // center the scaled box in the viewport. This survives nested
+      // transforms (e.g. when the OD viewer wraps the iframe in its own
+      // scale wrapper at zoom != 100%).
+      function fit() {
+        var sw = window.innerWidth;
+        var sh = window.innerHeight;
+        var pad = 32;
+        var s = Math.min((sw - pad) / 1920, (sh - pad) / 1080);
+        if (!isFinite(s) || s <= 0) s = 1;
+        var tx = (sw - 1920 * s) / 2;
+        var ty = (sh - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+      }
+
+      // ---- navigation -----------------------------------------------------
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+      function paint() {
+        slides.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
+        if (cur) cur.textContent = pad2(idx + 1);
+        if (total) total.textContent = pad2(slides.length);
+        if (prev) prev.toggleAttribute('disabled', idx <= 0);
+        if (next) next.toggleAttribute('disabled', idx >= slides.length - 1);
+      }
+      function go(i) {
+        idx = Math.max(0, Math.min(slides.length - 1, i));
+        paint();
+        try { localStorage.setItem(STORE, String(idx)); } catch (_) {}
+      }
+      function step(delta, e) {
+        if (e && e.__deckNavHandled) return;
+        if (e) e.__deckNavHandled = true;
+        go(idx + delta);
+      }
+      function onKey(e) {
+        var t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); step(1, e); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); step(-1, e); }
+        else if (e.key === 'Home') { e.preventDefault(); go(0); }
+        else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+      }
+      // Capture phase + listen on both targets — inside the OD iframe,
+      // focus may be on window OR document; a single non-capture listener
+      // silently misses presses.
+      window.addEventListener('keydown', onKey, true);
+      document.addEventListener('keydown', onKey, true);
+      if (prev) prev.addEventListener('click', function (e) { e.preventDefault(); step(-1, e); });
+      if (next) next.addEventListener('click', function (e) { e.preventDefault(); step(1, e); });
+
+      // Auto-focus body so arrow keys work without an initial click.
+      document.body.setAttribute('tabindex', '-1');
+      document.body.style.outline = 'none';
+      function focusDeck() { try { window.focus(); document.body.focus({ preventScroll: true }); } catch (_) {} }
+      document.addEventListener('mousedown', focusDeck);
+      window.addEventListener('load', focusDeck);
+
+      // Restore last position.
+      try {
+        var saved = parseInt(localStorage.getItem(STORE) || '0', 10);
+        if (!isNaN(saved) && saved >= 0 && saved < slides.length) idx = saved;
+      } catch (_) {}
+
+      window.addEventListener('resize', fit);
+      fit();
+      paint();
+      focusDeck();
+    })();
+  </script>
+</body>
+</html>
