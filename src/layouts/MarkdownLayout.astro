@@ -24,8 +24,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://codeharn
   </article>
 </BaseLayout>
 
-<script type="application/ld+json" define:vars={{ pageTitle, description, date }}>
-{
+<script type="application/ld+json" set:html={JSON.stringify({
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": pageTitle,
@@ -34,14 +33,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://codeharn
   "author": {
     "@type": "Person",
     "name": "TuBaKhuym",
-    url: "https://codeharness.kuckit.dev"
+    "url": "https://codeharness.kuckit.dev"
   },
   "publisher": {
     "@type": "Organization",
     "name": "CodeHarness",
-    url: "https://codeharness.kuckit.dev"
+    "url": "https://codeharness.kuckit.dev"
   }
-}
-</script>
+})}></script>
 <!-- FAQPage schema injected by skill:static-site-blog-growth -->
 <script type="application/ld+json" id="faq-schema"></script>
