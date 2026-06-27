@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Repository Harness: Loop Engineering for Autonomous Software Development</title>
+  <style>
+    /* ===========================================================
+       Deck framework — DO NOT EDIT the rules in this <style> block.
+       Edit only inside the second <style> block below (per-deck
+       styles) and inside <section class="slide"> bodies.
+
+       Contract this framework provides:
+         - 1920×1080 fixed canvas, scaled to fit the viewport
+         - Only .slide.active is visible at a time
+         - Prev/next + counter rendered outside the scaled stage
+         - Keyboard (← → space PgUp PgDn Home End), click, and stored
+           position survive iframe focus quirks
+         - "Save as PDF" produces a multi-page vertical PDF, one slide
+           per page, by toggling every slide visible under @media print
+       =========================================================== */
+    :root {
+      /* SLOT: theme tokens — the only top-level CSS the agent edits.
+         Add or override --bg / --fg / --accent / etc. here. */
+      --bg: #0d1117;
+      --fg: #f0f6fc;
+      --muted: #8b949e;
+      --accent: #f0b75e;
+      --surface: #161b22;
+      --shell: #010409;
+      --line: rgba(240, 246, 252, 0.14);
+      --line-strong: rgba(240, 246, 252, 0.28);
+      --green: #3fb950;
+      --blue: #58a6ff;
+      --red: #f85149;
+      --paper: #f6f1e8;
+      --ink: #16130f;
+      --font-display: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, Menlo, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--shell);
+      color: var(--fg);
+      font: 18px/1.5 -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .deck-shell {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+    .deck-stage {
+      width: 1920px;
+      height: 1080px;
+      background: var(--bg);
+      position: relative;
+      transform-origin: top left;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    /* Visibility toggle hardened with :not(.active) + !important so cascade
+       order can't break it. The previous `.slide { display:none }` rule
+       lost the cascade whenever a per-slide variant class (e.g.
+       `.s-cold { display:grid }`) was declared after it on the same
+       element — every slide silently became visible at once. The
+       `!important` is a belt-and-suspenders against agent code that adds
+       `!important` on variant classes too. */
+    .slide:not(.active) { display: none !important; }
+    /* The active default uses :where() so it has zero specificity. Per-slide
+       variant classes like `.s-cold { display:grid }` or
+       `.s-magazine { display:block }` can override the default flex layout
+       just by declaring `display` — no need for the variant to be more
+       specific. The hide rule above still wins for inactive slides. */
+    :where(.slide.active) { display: flex; flex-direction: column; }
+
+    /* Chrome — counter + prev/next live outside the scaled stage so they
+       don't shrink with it. Do not relocate them inside .deck-stage. */
+    .deck-counter {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(10, 14, 26, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      z-index: 1000;
+    }
+    .deck-counter button {
+      width: 36px; height: 36px;
+      background: transparent;
+      color: #fff;
+      border: 0;
+      border-radius: 50%;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s;
+    }
+    .deck-counter button:hover { background: rgba(255, 255, 255, 0.12); }
+    .deck-counter button[disabled] { opacity: 0.3; cursor: default; }
+    .deck-counter .deck-count {
+      padding: 0 14px;
+      letter-spacing: 0.22em;
+    }
+    .deck-counter .deck-count .total { color: rgba(255, 255, 255, 0.5); }
+    .deck-hint {
+      position: fixed;
+      bottom: 26px;
+      right: 28px;
+      color: rgba(255, 255, 255, 0.4);
+      font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    /* Print / PDF stitching — every slide stacks top-to-bottom, one per
+       page. The viewer's "Share → PDF" relies on this; do not remove. */
+    @media print {
+      @page { size: 1920px 1080px; margin: 0; }
+      html, body {
+        width: 1920px !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+      }
+      .deck-shell {
+        position: static !important;
+        display: block !important;
+        inset: auto !important;
+      }
+      .deck-stage {
+        width: 1920px !important;
+        height: auto !important;
+        transform: none !important;
+        box-shadow: none !important;
+        position: static !important;
+      }
+      .slide {
+        display: flex !important;
+        position: relative !important;
+        inset: auto !important;
+        width: 1920px !important;
+        height: 1080px !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .deck-counter, .deck-hint { display: none !important; }
+    }
+  </style>
+  <style>
+    /* SLOT: per-deck styles — typography, layout helpers, slide variants.
+       Add classes used by the slide content below, e.g. .title, .big-stat,
+       .grid-3. Do not redefine .deck-shell / .deck-stage / .slide /
+       .deck-counter / .deck-hint or anything inside @media print. */
+    body {
+      font-family: var(--font-body);
+    }
+    .s-tech {
+      padding: 78px 96px 96px 112px;
+      background:
+        linear-gradient(90deg, transparent 0 54px, var(--line) 54px 55px, transparent 55px),
+        radial-gradient(circle at 86% 14%, rgba(88, 166, 255, 0.12), transparent 26%),
+        var(--bg);
+    }
+    .s-tech::before {
+      content: "";
+      position: absolute;
+      left: 60px;
+      top: 78px;
+      width: 10px;
+      height: 2px;
+      background: var(--accent);
+    }
+    .s-paper {
+      padding: 84px 96px 96px 112px;
+      background: var(--paper);
+      color: var(--ink);
+    }
+    .kicker {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: 18px;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      margin: 0 0 26px;
+    }
+    .kicker::before {
+      content: "> ";
+    }
+    .hero {
+      font-family: var(--font-display);
+      font-size: 108px;
+      line-height: 1.02;
+      max-width: 1280px;
+      letter-spacing: -0.02em;
+      font-weight: 760;
+    }
+    .title {
+      font-family: var(--font-display);
+      font-size: 70px;
+      line-height: 1.08;
+      max-width: 1240px;
+      letter-spacing: -0.015em;
+      font-weight: 720;
+    }
+    .lede {
+      color: var(--muted);
+      font-size: 31px;
+      line-height: 1.42;
+      max-width: 930px;
+      margin-top: 26px;
+    }
+    .accent {
+      color: var(--accent);
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .mono {
+      font-family: var(--font-mono);
+    }
+    .grid {
+      display: grid;
+      gap: 26px;
+    }
+    .g2 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .g3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.72);
+      padding: 30px;
+      min-height: 190px;
+    }
+    .panel.hot {
+      border-color: rgba(240, 183, 94, 0.5);
+      background: rgba(240, 183, 94, 0.06);
+    }
+    .panel h3 {
+      font-size: 27px;
+      line-height: 1.2;
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+    .panel p,
+    .panel li {
+      color: var(--muted);
+      font-size: 23px;
+      line-height: 1.45;
+    }
+    .panel ul {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+    .panel li::before {
+      content: "·";
+      color: var(--accent);
+      margin-right: 12px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+      margin-top: 48px;
+    }
+    .flow span {
+      border: 1px solid var(--line);
+      background: rgba(22, 27, 34, 0.84);
+      padding: 22px 14px;
+      min-height: 118px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 19px;
+      line-height: 1.25;
+    }
+    .flow span:nth-child(2),
+    .flow span:nth-child(5),
+    .flow span:nth-child(8) {
+      border-color: rgba(240, 183, 94, 0.46);
+    }
+    .terminal {
+      border: 1px solid var(--line);
+      background: #010409;
+      font-family: var(--font-mono);
+      margin-top: 34px;
+    }
+    .terminal .bar {
+      height: 46px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 18px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #30363d;
+    }
+    .dot:first-child {
+      background: var(--accent);
+    }
+    pre {
+      margin: 0;
+      padding: 28px 34px 32px;
+      font-size: 22px;
+      line-height: 1.62;
+      color: var(--fg);
+      white-space: pre-wrap;
+    }
+    .code-comment {
+      color: var(--muted);
+      font-style: italic;
+    }
+    .code-key {
+      color: var(--accent);
+    }
+    .code-good {
+      color: var(--green);
+    }
+    .code-blue {
+      color: var(--blue);
+    }
+    .matrix {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 24px;
+      margin-top: 40px;
+      align-items: stretch;
+    }
+    .stack {
+      display: grid;
+      gap: 15px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 17px;
+      line-height: 1;
+      padding: 11px 14px;
+      margin-right: 8px;
+      margin-top: 8px;
+      background: rgba(22, 27, 34, 0.58);
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 32px;
+    }
+    .column {
+      border: 1px solid var(--line);
+      min-height: 310px;
+      padding: 16px;
+      background: rgba(22, 27, 34, 0.66);
+    }
+    .column h3 {
+      font-family: var(--font-mono);
+      color: var(--muted);
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .task {
+      border: 1px solid rgba(240, 246, 252, 0.18);
+      background: #0d1117;
+      padding: 16px;
+      min-height: 92px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      color: var(--fg);
+    }
+    .task small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .task.ready {
+      border-color: rgba(63, 185, 80, 0.55);
+    }
+    .task.review {
+      border-color: rgba(240, 183, 94, 0.55);
+    }
+    .task.blocked {
+      border-color: rgba(248, 81, 73, 0.52);
+    }
+    .timeline {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 34px;
+    }
+    .step {
+      border-left: 2px solid var(--accent);
+      background: rgba(22, 27, 34, 0.72);
+      padding: 19px 22px;
+      min-height: 94px;
+    }
+    .step b {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+    .step span {
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.35;
+    }
+    .close-list {
+      margin-top: 38px;
+      display: grid;
+      gap: 18px;
+      max-width: 1120px;
+    }
+    .close-list div {
+      border-top: 1px solid rgba(22, 19, 15, 0.18);
+      padding-top: 18px;
+      font-size: 32px;
+      line-height: 1.32;
+      color: rgba(22, 19, 15, 0.74);
+    }
+    .footer {
+      position: absolute;
+      left: 112px;
+      right: 96px;
+      bottom: 42px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 16px;
+    }
+    .s-paper .footer {
+      color: rgba(22, 19, 15, 0.55);
+    }
+    .notes {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="deck-shell">
+    <div class="deck-stage" id="deck-stage">
+
+      <!-- SLOT: slides — one <section class="slide"> per slide. The first
+           slide must have class="slide active". The framework auto-counts
+           them and toggles .active as the user navigates. -->
+
+      <section class="slide active s-tech" data-screen-label="01 Title">
+        <p class="kicker">repository-harness.pitch</p>
+        <h1 class="hero">Loop Engineering for autonomous software development</h1>
+        <p class="lede">Repository Harness turns agent runs into controlled, observable, reviewable engineering loops.</p>
+        <div class="terminal" style="width: 920px;">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>loop.txt</span></div>
+<pre><span class="code-key">Intent</span> -> Intake -> Story -> Agent Run
+       -> Proof -> Review -> Sync -> <span class="code-good">Next Loop</span></pre>
+        </div>
+        <div class="footer"><span>Repository Harness</span><span>5-minute pitch</span></div>
+        <aside class="notes">Open by naming the category: not another coding-agent demo, but a way to make repeated agent work safe enough to operate inside real repositories.</aside>
+      </section>
+
+      <section class="slide s-tech" data-screen-label="02 The Problem">
+        <p class="kicker">problem.md</p>
+        <h2 class="title">Most repositories are not ready for autonomous agents.</h2>
+        <div class="grid g3" style="margin-top: 52px;">
+          <div class="panel">
+            <h3>Agents can write code</h3>
+            <p>But the repo rarely tells them what matters, what is risky, or what proof will count.</p>
+          </div>
+          <div class="panel">
+            <h3>Intent is scattered</h3>
+            <p>Scope, constraints, validation, and decisions live across chat, memory, files, and people.</p>
+          </div>
+          <div class="panel hot">
+            <h3>Autonomy becomes risky</h3>
+            <p>Unclear boundaries create weak proof, hard review, and fragile follow-up loops.</p>
+          </div>
+        </div>
+        <div class="footer"><span>01 / Problem</span><span>scope · proof · review</span></div>
+        <aside class="notes">The pain is not that agents are weak. The pain is that the repository does not yet behave like a control system for those agents.</aside>
+      </section>
+
+      <section class="slide s-tech" data-screen-label="03 The Idea">
+        <p class="kicker">loop-engineering.flow</p>
+        <h2 class="title">Loop Engineering: a repeatable human-agent software loop.</h2>
+        <p class="lede">The app is what users touch. The harness is what agents touch.</p>
+        <div class="flow">
+          <span>Intent</span>
+          <span>Intake</span>
+          <span>Story</span>
+          <span>Agent<br>Run</span>
+          <span>Proof</span>
+          <span>Review</span>
+          <span>Sync</span>
+          <span>Next<br>Loop</span>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>repository-contract</span></div>
+<pre><span class="code-comment"># Repository Harness turns a repo into an agent-ready workspace.</span>
+human defines intent
+harness structures work
+codex executes in loop
+symphony exposes control</pre>
+        </div>
+        <div class="footer"><span>02 / Idea</span><span>human intent -> controlled execution</span></div>
+        <aside class="notes">Define Loop Engineering as the product category. Humans still own intent and approval; the harness makes the middle of the loop repeatable.</aside>
+      </section>
+
+      <section class="slide s-tech" data-screen-label="04 Core System">
+        <p class="kicker">system.components</p>
+        <h2 class="title">Repository Harness is the operating layer for agentic engineering.</h2>
+        <div class="matrix">
+          <div class="panel hot">
+            <h3>Stable entrypoint</h3>
+            <p><span class="mono">AGENTS.md</span> gives every run the same repo-specific operating manual.</p>
+            <div style="margin-top: 22px;">
+              <span class="pill">intent</span>
+              <span class="pill">constraints</span>
+              <span class="pill">validation</span>
+            </div>
+          </div>
+          <div class="grid g2">
+            <div class="panel"><h3>Feature intake</h3><p>Classifies work as tiny, normal, or high-risk.</p></div>
+            <div class="panel"><h3>Story matrix</h3><p>Tracks implementation status and validation proof.</p></div>
+            <div class="panel"><h3>Durable SQLite</h3><p>Stores stories, traces, dependencies, decisions, and run state.</p></div>
+            <div class="panel"><h3>Tool registry + Symphony</h3><p>Uses optional tools when present and runs agent work from Harness stories.</p></div>
+          </div>
+        </div>
+        <div class="footer"><span>03 / Core System</span><span>repo as operating layer</span></div>
+        <aside class="notes">This is the product architecture. It is not just a prompt file; it is a set of durable structures the agent can repeatedly touch.</aside>
+      </section>
+
+      <section class="slide s-tech" data-screen-label="05 Symphony Controller">
+        <p class="kicker">latest-implementation.ui</p>
+        <h2 class="title">Symphony Web UI Controller is the human control plane.</h2>
+        <p class="lede">It reads Harness truth; it does not create a second source of truth.</p>
+        <div class="board">
+          <div class="column">
+            <h3>Ready</h3>
+            <div class="task ready">Start review surface<small>deps clear · runnable</small></div>
+          </div>
+          <div class="column">
+            <h3>In Progress</h3>
+            <div class="task">Run Codex loop<small>events streaming</small></div>
+          </div>
+          <div class="column">
+            <h3>Review</h3>
+            <div class="task review">Validate proof<small>files · logs · PR state</small></div>
+          </div>
+          <div class="column">
+            <h3>Done</h3>
+            <div class="task">Sync merged task<small>closed loop</small></div>
+          </div>
+        </div>
+        <div style="margin-top: 18px;">
+          <span class="pill">Blocked when dependencies are unsafe</span>
+          <span class="pill">Needs Attention when proof is incomplete</span>
+        </div>
+        <div class="footer"><span>04 / Latest Implementation</span><span>browser control surface</span></div>
+        <aside class="notes">Make the positioning explicit: Symphony is not the harness replacement. It is the browser surface that lets humans start, watch, review, approve, and sync loops.</aside>
+      </section>
+
+      <section class="slide s-tech" data-screen-label="06 Demo Loop">
+        <p class="kicker">demo.script</p>
+        <h2 class="title">Demo goal: show one complete loop.</h2>
+        <div class="timeline">
+          <div class="step"><b>1. Open the controller</b><span><span class="mono">harness-symphony web</span>, then scan hierarchy and dependency graph.</span></div>
+          <div class="step"><b>2. Start a Ready task</b><span>Only runnable work can enter the active loop.</span></div>
+          <div class="step"><b>3. Watch Codex events</b><span>Live App Server events show execution, not a hidden black box.</span></div>
+          <div class="step"><b>4. Review evidence</b><span>Summary, result, validation, changed files, changeset, PR state, and logs.</span></div>
+          <div class="step"><b>5. Mark PR merged</b><span>The human confirms the external review outcome.</span></div>
+          <div class="step"><b>6. Approve sync</b><span>The task moves to Done only after proof and sync close the loop.</span></div>
+        </div>
+        <div class="footer"><span>05 / Demo</span><span>Ready -> In Progress -> Review -> Done</span></div>
+        <aside class="notes">Keep the demo crisp: one task, one loop, no branch into feature intake. The proof surface is the key reveal.</aside>
+      </section>
+
+      <section class="slide s-paper" data-screen-label="07 Close">
+        <p class="kicker" style="color: #9b5a16;">why-it-matters</p>
+        <h2 class="title" style="color: var(--ink); max-width: 1320px;">Autonomous software development becomes practical when every run is controlled, observable, and reviewable.</h2>
+        <div class="close-list">
+          <div>Codex becomes more than a code generator.</div>
+          <div>The repository becomes the control system.</div>
+          <div>Humans stay in charge of intent, review, and approval.</div>
+          <div>Agents execute repeatable engineering loops with proof.</div>
+        </div>
+        <div class="footer"><span>Repository Harness</span><span>Q&amp;A</span></div>
+        <aside class="notes">Close with the one-liner: Repository Harness makes autonomous software development practical by turning every agent run into a controlled, observable, reviewable engineering loop.</aside>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Framework chrome — DO NOT EDIT below this line. -->
+  <nav class="deck-counter" role="navigation" aria-label="Deck navigation">
+    <button type="button" id="deck-prev" aria-label="Previous slide">‹</button>
+    <span class="deck-count"><span id="deck-cur">01</span> <span class="total">/ <span id="deck-total">01</span></span></span>
+    <button type="button" id="deck-next" aria-label="Next slide">›</button>
+  </nav>
+  <div class="deck-hint">← / → · space</div>
+
+  <script>
+    (function () {
+      var stage = document.getElementById('deck-stage');
+      var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+      var prev = document.getElementById('deck-prev');
+      var next = document.getElementById('deck-next');
+      var cur = document.getElementById('deck-cur');
+      var total = document.getElementById('deck-total');
+      var STORE = 'deck:idx:' + (location.pathname || '/');
+      var idx = 0;
+
+      // ---- scale-to-fit ---------------------------------------------------
+      // The stage is 1920×1080 and sits at .deck-shell's (0, 0) in normal
+      // block flow — the shell is intentionally NOT a grid/flex container,
+      // so the stage's natural top-left is (0, 0). We scale via transform
+      // with transform-origin:top-left, then translate by the remainder to
+      // center the scaled box in the viewport. This survives nested
+      // transforms (e.g. when the OD viewer wraps the iframe in its own
+      // scale wrapper at zoom != 100%).
+      function fit() {
+        var sw = window.innerWidth;
+        var sh = window.innerHeight;
+        var pad = 32;
+        var s = Math.min((sw - pad) / 1920, (sh - pad) / 1080);
+        if (!isFinite(s) || s <= 0) s = 1;
+        var tx = (sw - 1920 * s) / 2;
+        var ty = (sh - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+      }
+
+      // ---- navigation -----------------------------------------------------
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+      function paint() {
+        slides.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
+        if (cur) cur.textContent = pad2(idx + 1);
+        if (total) total.textContent = pad2(slides.length);
+        if (prev) prev.toggleAttribute('disabled', idx <= 0);
+        if (next) next.toggleAttribute('disabled', idx >= slides.length - 1);
+      }
+      function go(i) {
+        idx = Math.max(0, Math.min(slides.length - 1, i));
+        paint();
+        try { localStorage.setItem(STORE, String(idx)); } catch (_) {}
+      }
+      function onKey(e) {
+        var t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(idx + 1); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+        else if (e.key === 'Home') { e.preventDefault(); go(0); }
+        else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+      }
+      // Capture phase + listen on both targets — inside the OD iframe,
+      // focus may be on window OR document; a single non-capture listener
+      // silently misses presses.
+      window.addEventListener('keydown', onKey, true);
+      document.addEventListener('keydown', onKey, true);
+      if (prev) prev.addEventListener('click', function () { go(idx - 1); });
+      if (next) next.addEventListener('click', function () { go(idx + 1); });
+
+      // Auto-focus body so arrow keys work without an initial click.
+      document.body.setAttribute('tabindex', '-1');
+      document.body.style.outline = 'none';
+      function focusDeck() { try { window.focus(); document.body.focus({ preventScroll: true }); } catch (_) {} }
+      document.addEventListener('mousedown', focusDeck);
+      window.addEventListener('load', focusDeck);
+
+      // Restore last position.
+      try {
+        var saved = parseInt(localStorage.getItem(STORE) || '0', 10);
+        if (!isNaN(saved) && saved >= 0 && saved < slides.length) idx = saved;
+      } catch (_) {}
+
+      window.addEventListener('resize', fit);
+      fit();
+      paint();
+      focusDeck();
+    })();
+  </script>
+</body>
+</html>
