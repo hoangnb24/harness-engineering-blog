@@ -203,8 +203,7 @@ Out of scope:
   </article>
 </BaseLayout>
 
-<script type="application/ld+json" is:inline define:vars={{ faqs }}>
-{
+<script type="application/ld+json" set:html={JSON.stringify({
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": faqs.map(f => ({
@@ -212,11 +211,10 @@ Out of scope:
     "name": f.q,
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": f.a
+      "text": f.a.replace(/<[^>]+>/g, '')
     }
   }))
-}
-</script>
+})}></script>
 
 <style>
   .lead {

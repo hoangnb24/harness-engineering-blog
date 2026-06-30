@@ -292,7 +292,7 @@ This is a small plugin. Keep changes small.
 ## Validation
 - `npm run build` — catches broken internal links
 - `npm run lint:md` — markdown lint
-- `grep -r "<TODO" src/content/` — find unfinished sections
+- `grep -r "<FIXME" src/content/` — find unfinished sections
 
 ## Structure
 - `src/content/docs/<section>/<page>.md`
@@ -307,7 +307,7 @@ This is a small plugin. Keep changes small.
 ```
 
 **What works:**
-- The grep for unfinished TODOs is a creative inclusion — it teaches the agent to look for in-progress work
+- The grep for unfinished markers is a creative inclusion — it teaches the agent to look for in-progress work
 - The internal-link format rule prevents agents from breaking links by writing `.md` paths that don't resolve
 - Admonitions vs bold-italic is the kind of project-style choice that agents would guess wrong about
 
@@ -315,7 +315,7 @@ This is a small plugin. Keep changes small.
 - "One H1 per page" is somewhat obvious for most documentation generators
 
 **What to copy:**
-- Teaching the agent to grep for unfinished work (`grep -r "<TODO"`). This is unusual and powerful — it makes the agent check the broader state of the project before editing.
+- Teaching the agent to grep for unfinished work (`grep -r "<FIXME"`). This is unusual and powerful — it makes the agent check the broader state of the project before editing.
 
 ---
 
