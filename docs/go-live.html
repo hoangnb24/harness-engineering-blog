@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Go Live: CI/CD, Cloud Deployment, Observability</title>
+  <style>
+    /* ===========================================================
+       Deck framework — DO NOT EDIT the rules in this <style> block.
+       Edit only inside the second <style> block below (per-deck
+       styles) and inside <section class="slide"> bodies.
+
+       Contract this framework provides:
+         - 1920×1080 fixed canvas, scaled to fit the viewport
+         - Only .slide.active is visible at a time
+         - Prev/next + counter rendered outside the scaled stage
+         - Keyboard (← → space PgUp PgDn Home End), click, and stored
+           position survive iframe focus quirks
+         - "Save as PDF" produces a multi-page vertical PDF, one slide
+           per page, by toggling every slide visible under @media print
+       =========================================================== */
+    :root {
+      /* SLOT: theme tokens — the only top-level CSS the agent edits.
+         Add or override --bg / --fg / --accent / etc. here. */
+      --bg: #0d1117;
+      --fg: #f0f6fc;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --surface: #161b22;
+      --shell: #010409;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--shell);
+      color: var(--fg);
+      font: 18px/1.5 -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .deck-shell {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+    .deck-stage {
+      width: 1920px;
+      height: 1080px;
+      background: var(--bg);
+      position: relative;
+      transform-origin: top left;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    /* Visibility toggle hardened with :not(.active) + !important so cascade
+       order can't break it. The previous `.slide { display:none }` rule
+       lost the cascade whenever a per-slide variant class (e.g.
+       `.s-cold { display:grid }`) was declared after it on the same
+       element — every slide silently became visible at once. The
+       `!important` is a belt-and-suspenders against agent code that adds
+       `!important` on variant classes too. */
+    .slide:not(.active) { display: none !important; }
+    /* The active default uses :where() so it has zero specificity. Per-slide
+       variant classes like `.s-cold { display:grid }` or
+       `.s-magazine { display:block }` can override the default flex layout
+       just by declaring `display` — no need for the variant to be more
+       specific. The hide rule above still wins for inactive slides. */
+    :where(.slide.active) { display: flex; flex-direction: column; }
+
+    /* Chrome — counter + prev/next live outside the scaled stage so they
+       don't shrink with it. Do not relocate them inside .deck-stage. */
+    .deck-counter {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(10, 14, 26, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      z-index: 1000;
+    }
+    .deck-counter button {
+      width: 36px; height: 36px;
+      background: transparent;
+      color: #fff;
+      border: 0;
+      border-radius: 50%;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s;
+    }
+    .deck-counter button:hover { background: rgba(255, 255, 255, 0.12); }
+    .deck-counter button[disabled] { opacity: 0.3; cursor: default; }
+    .deck-counter .deck-count {
+      padding: 0 14px;
+      letter-spacing: 0.22em;
+    }
+    .deck-counter .deck-count .total { color: rgba(255, 255, 255, 0.5); }
+    .deck-hint {
+      position: fixed;
+      bottom: 26px;
+      right: 28px;
+      color: rgba(255, 255, 255, 0.4);
+      font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    /* Print / PDF stitching — every slide stacks top-to-bottom, one per
+       page. The viewer's "Share → PDF" relies on this; do not remove. */
+    @media print {
+      @page { size: 1920px 1080px; margin: 0; }
+      html, body {
+        width: 1920px !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+      }
+      .deck-shell {
+        position: static !important;
+        display: block !important;
+        inset: auto !important;
+      }
+      .deck-stage {
+        width: 1920px !important;
+        height: auto !important;
+        transform: none !important;
+        box-shadow: none !important;
+        position: static !important;
+      }
+      .slide {
+        display: flex !important;
+        position: relative !important;
+        inset: auto !important;
+        width: 1920px !important;
+        height: 1080px !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .deck-counter, .deck-hint { display: none !important; }
+    }
+  </style>
+  <style>
+    /* SLOT: per-deck styles — typography, layout helpers, slide variants.
+       Add classes used by the slide content below, e.g. .title, .big-stat,
+       .grid-3. Do not redefine .deck-shell / .deck-stage / .slide /
+       .deck-counter / .deck-hint or anything inside @media print. */
+    :root {
+      --panel: #161b22;
+      --panel-2: #0b1220;
+      --line: rgba(240, 246, 252, 0.12);
+      --line-strong: rgba(240, 246, 252, 0.28);
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --font-display: ui-monospace, "JetBrains Mono", "IBM Plex Mono", SFMono-Regular, Menlo, monospace;
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "IBM Plex Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    body.tpl-tech-sharing { background: var(--shell); }
+    .s-grid { display: grid; grid-template-rows: 96px 1fr 72px; padding: 70px 92px 46px; }
+    .s-cover { display: grid; grid-template-columns: 1.03fr .97fr; gap: 70px; padding: 88px 92px 60px; }
+    .s-diagram { display: grid; grid-template-columns: .92fr 1.08fr; gap: 56px; padding: 72px 92px 50px; }
+    .s-code { display: grid; grid-template-columns: .86fr 1.14fr; gap: 52px; padding: 72px 92px 50px; }
+    .s-close { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; padding: 84px 92px 60px; background: #f0f6fc; color: #0d1117; }
+    .s-close .kicker, .s-close .accent, .s-close code { color: #0969da; }
+    .s-close .panel, .s-close .terminal { border-color: rgba(13,17,23,.18); background: rgba(13,17,23,.04); color: #0d1117; }
+    .s-close .terminal pre { color: #0d1117; background: rgba(255,255,255,.54); }
+    .s-close .muted, .s-close .small { color: rgba(13,17,23,.66); }
+
+    .head { display: flex; align-items: start; justify-content: space-between; gap: 48px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+    .kicker { font: 600 18px/1.1 var(--font-mono); color: var(--accent); letter-spacing: .05em; text-transform: uppercase; }
+    .kicker::before { content: "> "; color: var(--green); }
+    h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.04em; text-wrap: balance; }
+    h1 { font-size: 124px; line-height: .94; max-width: 11ch; }
+    h2 { font-size: 58px; line-height: 1.02; max-width: 19ch; }
+    h3 { font-size: 31px; line-height: 1.16; margin-bottom: 14px; }
+    .subtitle { font-size: 33px; line-height: 1.3; color: var(--muted); max-width: 28ch; margin-top: 28px; }
+    .lede { font-size: 31px; line-height: 1.38; color: var(--muted); max-width: 36ch; text-wrap: pretty; }
+    .body { display: grid; align-content: center; gap: 32px; padding: 36px 0 20px; min-height: 0; }
+    .muted { color: var(--muted); }
+    .accent { color: var(--accent); }
+    .green { color: var(--green); }
+    .yellow { color: var(--yellow); }
+    .red { color: var(--red); }
+    code, pre { font-family: var(--font-mono); }
+    .mono { font-family: var(--font-mono); }
+    .small { font: 500 18px/1.45 var(--font-mono); color: var(--muted); }
+    .footer { display: flex; align-items: end; justify-content: space-between; gap: 32px; border-top: 1px solid var(--line); padding-top: 18px; font: 500 16px/1.35 var(--font-mono); color: var(--muted); }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .panel { border: 1px solid var(--line); background: var(--panel); padding: 26px; min-height: 0; }
+    .panel.hot { border-color: rgba(88,166,255,.42); box-shadow: inset 0 3px 0 var(--accent); }
+    .panel.good { border-color: rgba(63,185,80,.34); box-shadow: inset 0 3px 0 var(--green); }
+    .panel.warn { border-color: rgba(210,153,34,.34); box-shadow: inset 0 3px 0 var(--yellow); }
+    .panel.bad { border-color: rgba(248,81,73,.34); box-shadow: inset 0 3px 0 var(--red); }
+    .panel p { font-size: 23px; line-height: 1.45; color: var(--muted); margin-top: 8px; }
+    .panel li { font-size: 22px; line-height: 1.42; color: var(--muted); margin: 10px 0 0 24px; }
+    .panel h3 + ul { margin-top: 8px; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    .tag { display: inline-flex; align-items: center; min-height: 36px; border: 1px solid var(--line); color: var(--fg); background: rgba(240,246,252,.04); padding: 8px 13px; font: 600 15px/1 var(--font-mono); }
+
+    .terminal { border: 1px solid var(--line-strong); background: #010409; overflow: hidden; }
+    .bar { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-bottom: 1px solid var(--line); color: var(--muted); font: 600 14px/1 var(--font-mono); background: #0d1117; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+    .dot:nth-child(2) { background: var(--yellow); }
+    .dot:nth-child(3) { background: var(--green); }
+    pre { font-size: 22px; line-height: 1.42; padding: 24px 26px; color: var(--fg); white-space: pre-wrap; }
+    .tiny pre { font-size: 18px; line-height: 1.38; }
+    .code-key { color: var(--accent); }
+    .code-str { color: #a5d6ff; }
+    .code-ok { color: var(--green); }
+    .code-warn { color: var(--yellow); }
+    .code-err { color: var(--red); }
+    .code-note { color: #7d8590; }
+
+    .route { display: grid; grid-template-columns: 210px 54px 1fr; align-items: center; gap: 16px; font: 600 25px/1.2 var(--font-mono); }
+    .route + .route { margin-top: 18px; }
+    .arrow { color: var(--accent); text-align: center; }
+    .node { border: 1px solid var(--line); background: rgba(88,166,255,.06); padding: 18px 20px; }
+    .node.dark { background: rgba(240,246,252,.04); }
+    .node.good { background: rgba(63,185,80,.08); border-color: rgba(63,185,80,.28); }
+    .table { border: 1px solid var(--line); }
+    .tr { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+    .tr:first-child { border-top: 0; }
+    .td { padding: 15px 18px; font-size: 22px; color: var(--muted); }
+    .td:first-child { color: var(--fg); border-right: 1px solid var(--line); font-family: var(--font-mono); }
+    .checklist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 13px 24px; }
+    .check { font: 600 22px/1.3 var(--font-mono); color: var(--fg); border-bottom: 1px solid var(--line); padding-bottom: 11px; }
+    .check::before { content: "[ ] "; color: var(--accent); }
+    .agenda-row { display: grid; grid-template-columns: 76px 1fr 130px; align-items: baseline; gap: 28px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .agenda-row:first-child { border-top: 1px solid var(--line-strong); }
+    .agenda-row span:first-child { color: var(--accent); font: 700 22px/1 var(--font-mono); }
+    .agenda-row b { font: 700 31px/1.15 var(--font-display); }
+    .agenda-row em { color: var(--muted); font: normal 16px/1 var(--font-mono); }
+  </style>
+</head>
+<body class="tpl-tech-sharing">
+  <div class="deck-shell">
+    <div class="deck-stage" id="deck-stage">
+
+      <section class="slide active s-cover" data-screen-label="01 Title">
+        <div>
+          <p class="kicker">tech talk / go live</p>
+          <h1>Go Live</h1>
+          <p class="subtitle">CI/CD, Cloud Deployment, Observability</p>
+          <div class="tag-row">
+            <span class="tag">University students</span>
+            <span class="tag">Demo: demo-harness</span>
+            <span class="tag">Next.js + PostgreSQL</span>
+          </div>
+        </div>
+        <div class="terminal" style="align-self:center">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>release-path.txt</span></div>
+<pre>GitHub
+  <span class="code-key">-&gt;</span> Docker image
+  <span class="code-key">-&gt;</span> AWS EC2 VPS
+  <span class="code-key">-&gt;</span> Traefik + HTTPS
+  <span class="code-key">-&gt;</span> Next.js + Postgres
+  <span class="code-key">-&gt;</span> Grafana observability</pre>
+        </div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="02 Localhost Is Not Production">
+        <div class="head"><p class="kicker">production != localhost</p><h2>Localhost proves start. Production proves operation.</h2></div>
+        <div class="body">
+          <div class="table">
+            <div class="tr"><div class="td">localhost:3001</div><div class="td">public HTTPS domain</div></div>
+            <div class="tr"><div class="td">one developer</div><div class="td">real users</div></div>
+            <div class="tr"><div class="td">manual restart</div><div class="td">restart policy</div></div>
+            <div class="tr"><div class="td">terminal logs</div><div class="td">searchable logs</div></div>
+            <div class="tr"><div class="td">local .env</div><div class="td">protected runtime secrets</div></div>
+            <div class="tr"><div class="td">refresh browser</div><div class="td">health checks and alerts</div></div>
+          </div>
+        </div>
+        <div class="footer"><span>Demo checkpoint: create the production machine on AWS EC2.</span><span>02 / 26</span></div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="03 Why We Do Not Start With PaaS">
+        <div class="head"><p class="kicker">see the primitives</p><h2>Useful platforms hide useful lessons.</h2></div>
+        <div class="body">
+          <p class="lede">Vercel, Railway, Render, and Fly.io are useful. Today we learn the primitives they usually hide.</p>
+          <div class="grid-3">
+            <div class="panel"><h3>Runtime</h3><p>Where does the app actually run, and which ports are public?</p></div>
+            <div class="panel"><h3>Release</h3><p>Where does the Docker image live, and how does rollback work?</p></div>
+            <div class="panel"><h3>Operations</h3><p>Where are secrets stored, and how do we know production is healthy?</p></div>
+          </div>
+        </div>
+        <div class="footer"><span>When a PaaS says "service unhealthy", today shows what that usually means.</span><span>03 / 26</span></div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="04 The Demo Project">
+        <div class="head"><p class="kicker">demo-harness</p><h2>A small full-stack TypeScript app.</h2></div>
+        <div class="body grid-2">
+          <div class="panel hot"><h3>Project shape</h3><ul><li>Next.js web app: <code>apps/web</code></li><li>Shared UI: <code>packages/ui</code></li><li>Environment validation: <code>packages/env</code></li><li>PostgreSQL package: <code>packages/db</code></li><li>Dockerfile + Compose stack</li></ul></div>
+          <div class="panel good"><h3>Prepared for demo</h3><ul><li><code>/healthz</code> endpoint</li><li>structured JSON request logs</li><li>Docker health checks</li><li>Traefik routes</li><li>Grafana dashboard</li></ul></div>
+        </div>
+        <div class="footer"><span>Realistic enough to show runtime, database, config, logs, metrics, and dependencies.</span><span>04 / 26</span></div>
+      </section>
+
+      <section class="slide s-diagram" data-screen-label="05 Big Picture Architecture">
+        <div>
+          <p class="kicker">architecture map</p>
+          <h2>Two flows: release path and runtime stack.</h2>
+          <p class="lede">Show each layer only when the demo reaches it. Grafana observes the stack instead of serving user traffic.</p>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>architecture.txt</span></div>
+<pre>Developer
+  -&gt; GitHub Repository
+  -&gt; GitHub Actions
+  -&gt; Container Registry
+  -&gt; AWS EC2 VPS
+
+AWS EC2 VPS
+  +-- Traefik
+  |     +-- HTTPS
+  |     +-- routing
+  +-- Next.js app container
+  +-- PostgreSQL container
+  +-- Grafana
+  +-- Loki
+  +-- Prometheus
+  +-- cAdvisor
+  +-- Node Exporter</pre>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="06 Cloud Deployment Starts With A VPS">
+        <div>
+          <p class="kicker">cloud target</p>
+          <h2>A VPS is just a Linux machine in the cloud.</h2>
+          <p class="lede">For this demo, the target is AWS EC2. The server will run Docker, Traefik, the app, Postgres, and observability services.</p>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>ec2-setup.txt</span></div>
+<pre>Name:          demo-harness-prod
+AMI:           Ubuntu Server LTS
+Instance type: t3.small or t3.medium
+Storage:       20-30 GB gp3
+Key pair:      demo-harness-key
+Network:       default VPC is fine for class demo</pre>
+        </div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="07 Cloud Security - Inbound Ports">
+        <div class="head"><p class="kicker">security group</p><h2>Public internet reaches Traefik, not every container.</h2></div>
+        <div class="body grid-2">
+          <div class="terminal tiny"><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>inbound-rules.txt</span></div><pre>22/tcp    SSH        my IP only
+80/tcp    HTTP       public
+443/tcp   HTTPS      public
+3001      Next.js    closed
+5432      Postgres   closed
+3000      Grafana    closed directly
+9090      Prometheus closed
+3100      Loki       closed</pre></div>
+          <div class="panel bad"><h3>Common real mistake</h3><p><code>5432/tcp Postgres public to 0.0.0.0/0</code></p><p>That makes the database reachable from the internet. Even with a password, this is unnecessary risk.</p></div>
+        </div>
+        <div class="footer"><span>Every public port is an attack surface.</span><span>07 / 26</span></div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="08 Docker Image Matters">
+        <div class="head"><p class="kicker">production artifact</p><h2>A Docker image is what production runs.</h2></div>
+        <div class="body">
+          <div class="grid-3">
+            <div class="panel"><h3>Size</h3><p>Large images make every deploy slower.</p></div>
+            <div class="panel bad"><h3>Secrets</h3><p><code>.env</code> copied into the image can leak through the registry.</p></div>
+            <div class="panel good"><h3>Version</h3><p>Commit SHA tags make incidents and rollbacks traceable.</p></div>
+          </div>
+          <p class="lede">Image quality affects deploy speed, security, debugging, rollback, and vulnerability scanning.</p>
+        </div>
+        <div class="footer"><span>Demo checkpoint: inspect the project Dockerfile before deploying.</span><span>08 / 26</span></div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="09 Dockerfile - Bad vs Better">
+        <div>
+          <p class="kicker">dockerfile</p>
+          <h2>Separate build time from runtime.</h2>
+          <div class="panel warn" style="margin-top:30px"><h3>Beginner pattern</h3><p>Large floating base image, weak cache, may copy local files and secrets, keeps build tools in runtime.</p></div>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>Dockerfile</span></div>
+<pre><span class="code-note"># common beginner Dockerfile</span>
+FROM node
+WORKDIR /app
+COPY . .
+RUN npm install
+RUN npm run build
+CMD ["npm", "start"]
+
+<span class="code-note"># better pattern</span>
+FROM node:24-slim AS builder
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun run build
+
+FROM node:24-slim AS runner
+ENV NODE_ENV=production
+COPY --from=builder /app/apps/web/.next/standalone ./
+CMD ["node", "apps/web/server.js"]</pre>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="10 Docker Compose Runs The System">
+        <div>
+          <p class="kicker">compose</p>
+          <h2>Dockerfile builds one image. Compose runs the system.</h2>
+          <p class="lede">Compose describes services, networks, volumes, restart policy, env files, and health dependencies.</p>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>docker-compose.prod.yml</span></div>
+<pre>services:
+  web:
+    image: ghcr.io/org/demo-harness:${APP_VERSION}
+    restart: unless-stopped
+    env_file: .env.production
+    networks: [internal, proxy]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    networks: [internal]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data</pre>
+        </div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="11 State Is Different From Code">
+        <div class="head"><p class="kicker">stateful data</p><h2>App containers are replaceable. Database data is not.</h2></div>
+        <div class="body grid-2">
+          <div class="terminal"><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>state-model.txt</span></div><pre>web container
+  replace on every deploy
+
+postgres container
+  can be recreated
+
+postgres_data volume
+  must persist
+  must be backed up</pre></div>
+          <div class="panel hot"><h3>Production upgrade</h3><p>Container Postgres is useful for learning. For a serious product, consider managed Postgres such as Amazon RDS.</p><p><code>pg_dump</code> is not enough unless restore is tested.</p></div>
+        </div>
+        <div class="footer"><span>Backup is only real when restore works.</span><span>11 / 26</span></div>
+      </section>
+
+      <section class="slide s-diagram" data-screen-label="12 Traefik As The Front Door">
+        <div>
+          <p class="kicker">reverse proxy</p>
+          <h2>Traefik is the front door.</h2>
+          <p class="lede">Internet traffic enters on 80/443. Traefik handles TLS and routes by domain to private container ports.</p>
+          <div class="tag-row"><span class="tag">HTTP -&gt; HTTPS</span><span class="tag">Let's Encrypt</span><span class="tag">Docker labels</span></div>
+        </div>
+        <div>
+          <div class="route"><div class="node">Internet</div><div class="arrow">-&gt;</div><div class="node good">EC2:80/443</div></div>
+          <div class="route"><div class="node">Traefik</div><div class="arrow">-&gt;</div><div class="node dark">web:3001</div></div>
+          <div class="route"><div class="node">app.example.com</div><div class="arrow">-&gt;</div><div class="node dark">Next.js app</div></div>
+          <div class="route"><div class="node">grafana.example.com</div><div class="arrow">-&gt;</div><div class="node dark">Grafana</div></div>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="13 DNS And HTTPS">
+        <div>
+          <p class="kicker">domain + tls</p>
+          <h2>Users need a stable, secure address.</h2>
+          <p class="lede">DNS points hostnames to the EC2 Elastic IP. Traefik requests and renews certificates, then routes traffic into containers.</p>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>verify-https.sh</span></div>
+<pre>DNS:
+  app.example.com      A -&gt; EC2 Elastic IP
+  grafana.example.com  A -&gt; EC2 Elastic IP
+
+Request:
+  browser
+    -&gt; https://app.example.com
+    -&gt; Traefik
+    -&gt; web container
+
+$ curl -I http://app.example.com
+$ curl -I https://app.example.com</pre>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="14 Health Check">
+        <div>
+          <p class="kicker">/healthz</p>
+          <h2>Turn "I think it works" into a contract.</h2>
+          <p class="lede">The same endpoint can be used by GitHub Actions, Docker health checks, Grafana, uptime monitors, and alerts.</p>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>health-response.json</span></div>
+<pre>GET /healthz
+
+200 OK
+{
+  "status": "ok",
+  "version": "a1b2c3d",
+  "uptime": 1234,
+  "database": "ok"
+}</pre>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="15 CI/CD Pipeline">
+        <div>
+          <p class="kicker">pipeline</p>
+          <h2>Production runs the image CI already verified.</h2>
+          <p class="lede">CI checks code. CD moves the verified artifact to EC2 and fails if health verification fails.</p>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>github-actions-flow.txt</span></div>
+<pre>git push
+  -&gt; GitHub Actions
+  -&gt; install dependencies
+  -&gt; typecheck and test
+  -&gt; build Docker image
+  -&gt; scan image
+  -&gt; push image to registry
+  -&gt; SSH to EC2
+  -&gt; docker compose pull
+  -&gt; docker compose up -d
+  -&gt; curl /healthz</pre>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="16 Registry And Image Tags">
+        <div>
+          <p class="kicker">registry</p>
+          <h2>Never rely on <span class="accent">latest</span> for rollback.</h2>
+          <p class="lede">The SHA tag is the source of truth. Human-friendly tags are shortcuts.</p>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>deploy.sh</span></div>
+<pre>ghcr.io/org/demo-harness:a1b2c3d
+ghcr.io/org/demo-harness:main
+
+APP_IMAGE=ghcr.io/org/demo-harness:a1b2c3d \
+docker compose -f docker-compose.prod.yml up -d
+
+curl -fsS https://app.example.com/healthz
+
+demo-harness:sha-a1b2c3d
+demo-harness:main-20260630-1015
+demo-harness:prod-current
+demo-harness:prod-previous</pre>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="17 Runtime Secrets">
+        <div>
+          <p class="kicker">runtime config</p>
+          <h2>Secrets should not be inside the Docker image.</h2>
+          <p class="lede">The image contains code. The server or secret store injects runtime configuration.</p>
+          <div class="tag-row"><span class="tag">EC2 .env</span><span class="tag">GitHub secrets</span><span class="tag">SSM</span><span class="tag">Secrets Manager</span></div>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>.env.production</span></div>
+<pre>APP_IMAGE=ghcr.io/org/demo-harness:a1b2c3d
+POSTGRES_PASSWORD=long-random-password
+DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/demo-harness
+CORS_ORIGIN=https://app.example.com
+GRAFANA_ADMIN_PASSWORD=long-random-password
+
+Bad:
+  COPY .env .env
+  bake DATABASE_URL into image
+
+Better:
+  server/runtime injects DATABASE_URL</pre>
+        </div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="18 Observability Stack For This Demo">
+        <div class="head"><p class="kicker">grafana-centered</p><h2>Logs and metrics first. Tracing later.</h2></div>
+        <div class="body">
+          <div class="grid-3">
+            <div class="panel hot"><h3>Grafana</h3><p>Dashboards and Explore for production visibility.</p></div>
+            <div class="panel"><h3>Loki</h3><p>Search JSON logs from Docker stdout.</p></div>
+            <div class="panel"><h3>Prometheus</h3><p>Collects metrics from the app and exporters.</p></div>
+            <div class="panel"><h3>cAdvisor</h3><p>Container CPU, memory, restart counts.</p></div>
+            <div class="panel"><h3>Node Exporter</h3><p>EC2 CPU, RAM, disk, network.</p></div>
+            <div class="panel"><h3>Promtail / Alloy</h3><p>Ships Docker logs into Loki.</p></div>
+          </div>
+        </div>
+        <div class="footer"><span>Mimir and Tempo are next-step topics, not required for the first live demo.</span><span>18 / 26</span></div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="19 Logs - What Happened">
+        <div>
+          <p class="kicker">logs</p>
+          <h2>Logs answer: what happened?</h2>
+          <p class="lede">Application writes JSON logs to stdout. Docker captures them. Loki makes them searchable.</p>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>request-log.json</span></div>
+<pre>{
+  "timestamp": "2026-06-30T10:00:00.000Z",
+  "level": "info",
+  "request_id": "req_123",
+  "action": "GET /healthz",
+  "duration_ms": 12,
+  "status_code": 200,
+  "message": "request completed"
+}
+
+Next.js stdout -&gt; Docker logs -&gt; Promtail/Alloy -&gt; Loki -&gt; Grafana Explore
+
+{container="web"} |= "status_code\":500"
+{container="web"} |= "request_id\":\"req_123"</pre>
+        </div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="20 Metrics - Is It Healthy Over Time">
+        <div class="head"><p class="kicker">metrics</p><h2>Metrics answer: is it healthy over time?</h2></div>
+        <div class="body grid-2">
+          <div class="panel hot"><h3>Dashboard questions</h3><ul><li>Is CPU high?</li><li>Is memory growing?</li><li>Is disk almost full?</li><li>Did a container restart?</li><li>Are 5xx errors increasing?</li></ul></div>
+          <div class="terminal tiny"><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>alert-examples.txt</span></div><pre>CPU &gt; 85% for 10 minutes
+disk free &lt; 15%
+container restarted more than 3 times in 5 minutes
+/healthz failed 3 checks in a row
+5xx rate &gt; 2% for 5 minutes</pre></div>
+        </div>
+        <div class="footer"><span>Sources: Node Exporter, cAdvisor, Traefik, and /healthz probe.</span><span>20 / 26</span></div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="21 Grafana Dashboard Walkthrough">
+        <div>
+          <p class="kicker">dashboard</p>
+          <h2>One dashboard should answer one question.</h2>
+          <p class="lede"><span class="accent">Is production healthy right now?</span></p>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>walkthrough.txt</span></div>
+<pre>Top row:
+  app health, current version, uptime
+Server row:
+  EC2 CPU, memory, disk, network
+Container row:
+  web CPU/memory, postgres CPU/memory, restart count
+Traffic row:
+  request rate, 2xx/4xx/5xx, latency
+Logs row:
+  recent errors, slow requests, deploy logs
+
+1. show current app version
+2. call /healthz
+3. search the matching log in Loki</pre>
+        </div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="22 Release Safety And Rollback">
+        <div>
+          <p class="kicker">release safety</p>
+          <h2>Deploy is only half the story. We also need a way back.</h2>
+          <p class="lede">Rollback is easy only when database changes are compatible.</p>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>release-record.txt</span></div>
+<pre>release_id: 2026-06-30-001
+commit: a1b2c3d
+image: ghcr.io/org/demo-harness:a1b2c3d
+deployed_by: github-actions
+healthz: passed
+previous_image: ghcr.io/org/demo-harness:9f8e7d6
+
+APP_IMAGE=ghcr.io/org/demo-harness:9f8e7d6 \
+docker compose -f docker-compose.prod.yml up -d
+
+Safer migration:
+1. add nullable column
+2. deploy app that reads old and new shape
+3. backfill data
+4. make stricter constraint later</pre>
+        </div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="23 Cost And Tradeoffs">
+        <div class="head"><p class="kicker">tradeoffs</p><h2>VPS gives control, but also responsibility.</h2></div>
+        <div class="body grid-2">
+          <div class="panel hot"><h3>Class demo</h3><p>One EC2 instance with Compose is transparent and teachable.</p><ul><li>EC2 instance</li><li>EBS disk</li><li>Elastic IP</li><li>domain name</li><li>backup and monitoring storage</li></ul></div>
+          <div class="panel good"><h3>Paid product upgrade</h3><p>Consider stronger managed pieces when customers depend on it.</p><ul><li>RDS for durability</li><li>managed backups</li><li>private subnets</li><li>IAM/SSM instead of direct SSH</li><li>alert routing</li></ul></div>
+        </div>
+        <div class="footer"><span>The point is not VPS over PaaS. The point is understanding the tradeoff.</span><span>23 / 26</span></div>
+      </section>
+
+      <section class="slide s-grid" data-screen-label="24 Go Live Checklist">
+        <div class="head"><p class="kicker">checklist</p><h2>Go live is a set of conditions.</h2></div>
+        <div class="body">
+          <div class="checklist">
+            <div class="check">Security group exposes only required ports</div>
+            <div class="check">Docker and Compose are installed</div>
+            <div class="check">Image is small, scanned, tagged by SHA</div>
+            <div class="check">Secrets are not baked into image</div>
+            <div class="check">Postgres data has persistent volume</div>
+            <div class="check">Traefik routes app and Grafana</div>
+            <div class="check">HTTPS works</div>
+            <div class="check">/healthz passes</div>
+            <div class="check">GitHub Actions deploys image</div>
+            <div class="check">Logs are searchable in Loki</div>
+            <div class="check">Metrics are visible in Grafana</div>
+            <div class="check">Rollback is tested</div>
+          </div>
+        </div>
+        <div class="footer"><span>Use it before the demo, during deployment, and after deployment.</span><span>24 / 26</span></div>
+      </section>
+
+      <section class="slide s-code" data-screen-label="25 Live Demo Flow">
+        <div>
+          <p class="kicker">presentation rhythm</p>
+          <h2>Show first. Explain second. Summarize third.</h2>
+          <p class="lede">Use a pre-created EC2 instance or screenshots if live cloud setup is slow, but keep the same conceptual order.</p>
+        </div>
+        <div class="terminal tiny">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>demo-flow.txt</span></div>
+<pre>1. Launch EC2 instance
+2. Show security group inbound ports
+3. SSH into the VPS
+4. Install Docker
+5. Show project Dockerfile
+6. Run production Compose
+7. Show Traefik route
+8. Open HTTPS domain
+9. Call /healthz
+10. Push a small change
+11. Watch GitHub Actions deploy
+12. Open Grafana dashboard
+13. Search Loki logs
+14. Show container/server metrics
+15. Explain rollback</pre>
+        </div>
+      </section>
+
+      <section class="slide s-close" data-screen-label="26 Closing">
+        <div>
+          <p class="kicker">closing</p>
+          <h2 style="font-size:74px">Tools change.<br>Fundamentals stay.</h2>
+          <p class="lede" style="color:rgba(13,17,23,.72)">Go live is not one button. It is a chain of operational decisions.</p>
+          <div class="tag-row"><span class="tag">Q&amp;A</span><span class="tag">deployment</span><span class="tag">observability</span></div>
+        </div>
+        <div class="terminal">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>students-should-draw.txt</span></div>
+<pre>browser
+  -&gt; security group 80/443
+  -&gt; Traefik
+  -&gt; app container
+  -&gt; database
+
+GitHub Actions
+  -&gt; image registry
+  -&gt; EC2 deploy
+
+Grafana
+  -&gt; logs and metrics</pre>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Framework chrome — DO NOT EDIT below this line. -->
+  <nav class="deck-counter" role="navigation" aria-label="Deck navigation">
+    <button type="button" id="deck-prev" aria-label="Previous slide">‹</button>
+    <span class="deck-count"><span id="deck-cur">01</span> <span class="total">/ <span id="deck-total">01</span></span></span>
+    <button type="button" id="deck-next" aria-label="Next slide">›</button>
+  </nav>
+  <div class="deck-hint">← / → · space</div>
+
+  <script>
+    (function () {
+      var stage = document.getElementById('deck-stage');
+      var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+      var prev = document.getElementById('deck-prev');
+      var next = document.getElementById('deck-next');
+      var cur = document.getElementById('deck-cur');
+      var total = document.getElementById('deck-total');
+      var STORE = 'deck:idx:' + (location.pathname || '/');
+      var idx = 0;
+
+      // ---- scale-to-fit ---------------------------------------------------
+      // The stage is 1920×1080 and sits at .deck-shell's (0, 0) in normal
+      // block flow — the shell is intentionally NOT a grid/flex container,
+      // so the stage's natural top-left is (0, 0). We scale via transform
+      // with transform-origin:top-left, then translate by the remainder to
+      // center the scaled box in the viewport. This survives nested
+      // transforms (e.g. when the OD viewer wraps the iframe in its own
+      // scale wrapper at zoom != 100%).
+      function fit() {
+        var sw = window.innerWidth;
+        var sh = window.innerHeight;
+        var pad = 32;
+        var s = Math.min((sw - pad) / 1920, (sh - pad) / 1080);
+        if (!isFinite(s) || s <= 0) s = 1;
+        var tx = (sw - 1920 * s) / 2;
+        var ty = (sh - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+      }
+
+      // ---- navigation -----------------------------------------------------
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+      function paint() {
+        slides.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
+        if (cur) cur.textContent = pad2(idx + 1);
+        if (total) total.textContent = pad2(slides.length);
+        if (prev) prev.toggleAttribute('disabled', idx <= 0);
+        if (next) next.toggleAttribute('disabled', idx >= slides.length - 1);
+      }
+      function go(i) {
+        idx = Math.max(0, Math.min(slides.length - 1, i));
+        paint();
+        try { localStorage.setItem(STORE, String(idx)); } catch (_) {}
+      }
+      function onKey(e) {
+        var t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if (e.__deckHandled) return;
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(idx + 1); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+        else if (e.key === 'Home') { e.preventDefault(); go(0); }
+        else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+        else return;
+        e.__deckHandled = true;
+      }
+      // Capture phase + listen on both targets — inside the OD iframe,
+      // focus may be on window OR document; a single non-capture listener
+      // silently misses presses.
+      window.addEventListener('keydown', onKey, true);
+      document.addEventListener('keydown', onKey, true);
+      if (prev) prev.addEventListener('click', function () { go(idx - 1); });
+      if (next) next.addEventListener('click', function () { go(idx + 1); });
+
+      // Auto-focus body so arrow keys work without an initial click.
+      document.body.setAttribute('tabindex', '-1');
+      document.body.style.outline = 'none';
+      function focusDeck() { try { window.focus(); document.body.focus({ preventScroll: true }); } catch (_) {} }
+      document.addEventListener('mousedown', focusDeck);
+      window.addEventListener('load', focusDeck);
+
+      // Restore last position.
+      try {
+        var saved = parseInt(localStorage.getItem(STORE) || '0', 10);
+        if (!isNaN(saved) && saved >= 0 && saved < slides.length) idx = saved;
+      } catch (_) {}
+
+      window.addEventListener('resize', fit);
+      fit();
+      paint();
+      focusDeck();
+    })();
+  </script>
+</body>
+</html>
