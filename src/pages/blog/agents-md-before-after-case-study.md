@@ -186,6 +186,8 @@ code, and validation material relevant to the task.
 
 A warehouse instruction copies all of those documents into the root file. That increases context load and creates drift.
 
+The root file is only one part of the system. [The five layers of coding-agent context](/blog/five-layers-coding-agent-context/) show how the router connects durable repository instructions to task state, session discoveries, decision history, and model knowledge without flattening them into one document.
+
 For a practical starting structure, use the [AGENTS.md template](/agents-md-template/) and keep the root file focused on orientation, boundaries, validation, and handoff.
 
 ### 2. Classify outcomes before classifying implementation work

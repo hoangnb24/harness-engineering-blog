@@ -48,6 +48,8 @@ Context engineering is a property of the repository itself. The repo either enco
 
 Repo context has five layers, from most specific to most durable:
 
+For a symptom-first model that shows how to locate a missing-context failure and decide where the repair belongs, use [the five layers of coding-agent context diagnostic guide](/blog/five-layers-coding-agent-context/).
+
 ### Layer 1 — Task context
 
 What the agent is being asked to do right now.

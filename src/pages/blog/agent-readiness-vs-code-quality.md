@@ -181,6 +181,8 @@ For release changes, follow docs/runbooks/release.md.
 
 This is [context engineering for coding agents](/context-engineering-for-coding-agents/) at repository level: place the right context where it will be discovered at the right moment.
 
+When the source is still unclear, [diagnose the five coding-agent context layers](/blog/five-layers-coding-agent-context/) to separate a task, session, repository-instruction, decision-history, or model-knowledge failure before adding more documentation.
+
 ### 6. Pull requests are reviewed, but handoff evidence is undefined
 
 Traditional code quality often relies on reviewers to ask for missing evidence. Agent-ready repositories define the evidence before work starts.
