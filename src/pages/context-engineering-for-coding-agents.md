@@ -269,6 +269,8 @@ Then run one coding-agent task and watch what the agent needs that you did not p
 
 ## Related pages
 
+- [Why Coding-Agent Prompts Fail When Context Lives Only in Prompts](/blog/why-coding-agent-prompts-fail/) — move repeated corrections into durable repository context
+- [The Five Layers of Coding-Agent Context](/blog/five-layers-coding-agent-context/) — diagnose which context layer failed
 - [What Is an Agent-Ready Repository?](/agent-ready-repository/) — foundational concept
 - [Harness Engineering for Coding Agents](/harness-engineering-for-coding-agents/) — operational workflow
 - [AGENTS.md Template](/agents-md-template/) — copy and adapt the starting file

@@ -288,6 +288,7 @@ Pick one repeated coding-agent failure. Identify the first wrong decision and th
 
 ## Related pages
 
+- [Why Coding-Agent Prompts Fail When Context Lives Only in Prompts](/blog/why-coding-agent-prompts-fail/)
 - [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/)
 - [AGENTS.md Before and After: A Real Repository Case Study](/blog/agents-md-before-after-case-study/)
 - [Agent-Readiness vs Code Quality](/blog/agent-readiness-vs-code-quality/)
