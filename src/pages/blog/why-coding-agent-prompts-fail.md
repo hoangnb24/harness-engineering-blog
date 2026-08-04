@@ -310,6 +310,7 @@ Use prompts for the current outcome, constraints, and authority. Put durable ope
 
 ## Related pages
 
+- [Coding-Agent Failure Modes: A Diagnostic Taxonomy](/blog/coding-agent-failure-modes/)
 - [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/)
 - [The Five Layers of Coding-Agent Context](/blog/five-layers-coding-agent-context/)
 - [How to Write an AGENTS.md That Actually Works](/blog/how-to-write-agents-md/)
