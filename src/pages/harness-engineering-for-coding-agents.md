@@ -188,6 +188,8 @@ This workflow depends on the agent-ready repository foundation:
 
 Together these form a complete system: the repo knows what it is, the harness knows how work flows through it.
 
+The [repository harness pattern language](/blog/repository-harness-patterns/) breaks this system into nine reusable patterns for routing, task boundaries, source-of-truth control, decision memory, validation, handoff, checkpoints, and safe recovery.
+
 ---
 
 ## When to use this workflow
@@ -252,6 +254,7 @@ No. Human review is still required for every change. The harness makes agent out
 
 ## Related pages
 
+- [Repository Harness Patterns](/blog/repository-harness-patterns/) — nine composable patterns for reliable agent work
 - [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/) — the parent pillar page
 - [What Is an Agent-Ready Repository?](/agent-ready-repository/) — foundational concept
 - [AGENTS.md Template](/agents-md-template/) — copy and adapt the operating file

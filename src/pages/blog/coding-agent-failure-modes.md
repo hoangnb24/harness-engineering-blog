@@ -385,6 +385,7 @@ Start with one recent bad session. Find the first wrong decision. Assign a failu
 
 ## Related pages
 
+- [Repository Harness Patterns](/blog/repository-harness-patterns/) — composable controllers for recurring failure classes
 - [The Five Layers of Coding-Agent Context](/blog/five-layers-coding-agent-context/)
 - [Why Coding-Agent Prompts Fail When Context Lives Only in Prompts](/blog/why-coding-agent-prompts-fail/)
 - [Context Engineering for Coding Agents](/context-engineering-for-coding-agents/)
